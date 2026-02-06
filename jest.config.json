@@ -1,0 +1,29 @@
+{
+  "projects": [
+    {
+      "displayName": "backend",
+      "preset": "ts-jest",
+      "testEnvironment": "node",
+      "roots": ["<rootDir>/src", "<rootDir>/tests/unit", "<rootDir>/tests/integration"],
+      "testMatch": ["**/?(*.)+(spec|test).ts", "!**/frontend/**"],
+      "moduleFileExtensions": ["ts", "tsx", "js", "jsx", "json", "node"],
+      "collectCoverageFrom": [
+        "src/**/*.ts",
+        "!src/**/*.d.ts",
+        "!src/index.ts"
+      ],
+      "coverageDirectory": "coverage/backend",
+      "moduleNameMapper": {
+        "^@/(.*)$": "<rootDir>/src/$1"
+      }
+    },
+    {
+      "displayName": "frontend",
+      "testEnvironment": "jsdom",
+      "roots": ["<rootDir>/tests/frontend"],
+      "testMatch": ["**/?(*.)+(spec|test).js"],
+      "setupFilesAfterEnv": ["<rootDir>/tests/frontend/setup.js"],
+      "moduleFileExtensions": ["js", "json"]
+    }
+  ]
+}
