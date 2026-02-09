@@ -1,616 +1,754 @@
 # Eventful API Documentation
 
-## Overview
-Eventful is a comprehensive ticketing and event management platform built with TypeScript, Express.js, MongoDB, and Redis.
-
 ## Base URL
 ```
 http://localhost:5000/api
 ```
 
 ## Authentication
-All protected endpoints require a Bearer token in the Authorization header:
+Most endpoints require JWT authentication. Include the token in the Authorization header:
 ```
+Authorization: Bearer <your_jwt_token>
+```
+
+## API Endpoints
+
+### Authentication
+
+#### Register User
+```http
+POST /api/auth/register
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "password": "password123",
+  "firstName": "John",
+  "lastName": "Doe",
+  "role": "eventee",  // "creator" or "eventee"
+  "phoneNumber": "+234800000000" // optional
+}
+```
+
+#### Login
+```http
+POST /api/auth/login
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "password": "password123"
+}
+```
+
+#### Get Profile
+```http
+GET /api/auth/profile
 Authorization: Bearer <token>
 ```
 
-## Response Format
-All responses follow a standard format:
-```json
+#### Update Profile
+```http
+PUT /api/auth/profile
+Authorization: Bearer <token>
+Content-Type: application/json
+
 {
-  "status": "success|error",
-  "message": "Description of the response",
-  "data": {}
+  "firstName": "John",
+  "lastName": "Updated",
+  "phoneNumber": "+234800000000",
+  "profileImage": "https://example.com/image.jpg"
 }
 ```
 
 ---
 
-## Authentication Endpoints
+### Events
 
-### 1. User Registration
-**POST** `/auth/signup`
+#### Create Event (Creator only)
+```http
+POST /api/events
+Authorization: Bearer <token>
+Content-Type: application/json
 
-**Request Body:**
-```json
 {
-  "firstName": "string",
-  "lastName": "string",
-  "email": "string",
-  "password": "string (min 6 chars)",
-  "phone": "string",
-  "role": "creator|eventee"
-}
-```
-
-**Response (201):**
-```json
-{
-  "status": "success",
-  "message": "User registered successfully",
-  "data": {
-    "user": {
-      "_id": "string",
-      "firstName": "string",
-      "lastName": "string",
-      "email": "string",
-      "phone": "string",
-      "role": "creator|eventee"
-    },
-    "token": "string"
-  }
-}
-```
-
-### 2. User Login
-**POST** `/auth/signin`
-
-**Request Body:**
-```json
-{
-  "email": "string",
-  "password": "string"
-}
-```
-
-**Response (200):**
-```json
-{
-  "status": "success",
-  "message": "User signed in successfully",
-  "data": {
-    "user": { /* user data */ },
-    "token": "string"
-  }
-}
-```
-
-### 3. Get User Profile
-**GET** `/auth/profile`
-
-**Headers:** `Authorization: Bearer <token>`
-
-**Response (200):**
-```json
-{
-  "status": "success",
-  "data": { /* user profile */ }
-}
-```
-
-### 4. Update User Profile
-**PATCH** `/auth/profile`
-
-**Headers:** `Authorization: Bearer <token>`
-
-**Request Body:**
-```json
-{
-  "firstName": "string",
-  "lastName": "string",
-  "phone": "string",
-  "bio": "string",
-  "profileImage": "string (URL)",
-  "socialLinks": {
-    "facebook": "string",
-    "twitter": "string",
-    "instagram": "string",
-    "linkedin": "string"
-  }
-}
-```
-
----
-
-## Event Endpoints
-
-### 1. Create Event (Creator Only)
-**POST** `/events`
-
-**Headers:** `Authorization: Bearer <creator-token>`
-
-**Request Body:**
-```json
-{
-  "title": "string",
-  "description": "string",
-  "eventType": "concert|theater|sports|conference|meetup|workshop|festival|other",
-  "startDate": "ISO-8601 date",
-  "endDate": "ISO-8601 date",
+  "title": "Amazing Concert",
+  "description": "Join us for an unforgettable night of music",
+  "category": "concert",
+  "venue": "National Stadium",
   "location": {
-    "address": "string",
-    "city": "string",
-    "state": "string",
-    "zipCode": "string",
-    "country": "string",
-    "latitude": "number (optional)",
-    "longitude": "number (optional)"
+    "address": "123 Main Street",
+    "city": "Lagos",
+    "state": "Lagos",
+    "country": "Nigeria",
+    "coordinates": {
+      "latitude": 6.5244,
+      "longitude": 3.3792
+    }
   },
-  "capacity": "number",
-  "ticketPrice": "number",
-  "category": "music|sports|entertainment|education|business|other",
-  "tags": ["string"],
-  "image": "string (URL, optional)",
-  "banner": "string (URL, optional)"
+  "startDate": "2024-12-31T20:00:00Z",
+  "endDate": "2024-12-31T23:59:00Z",
+  "ticketPrice": 5000,
+  "totalTickets": 1000,
+  "images": ["https://example.com/event1.jpg"],
+  "status": "published",  // "draft", "published", "cancelled", "completed"
+  "defaultReminder": "1_day",  // "1_hour", "1_day", "3_days", "1_week", "2_weeks"
+  "tags": ["music", "concert", "entertainment"]
 }
 ```
 
-**Response (201):**
-```json
+#### Get All Events
+```http
+GET /api/events?page=1&limit=10&category=concert&search=music&status=published
+```
+
+#### Get Event by ID
+```http
+GET /api/events/id
+```
+
+#### Get My Events (Creator only)
+```http
+GET /api/events/my-events?page=1&limit=10
+Authorization: Bearer <token>
+```
+
+#### Update Event Status (Creator only)
+```http
+PATCH /api/events/id/status
+Authorization: Bearer <token>
+Content-Type: application/json
+
 {
-  "status": "success",
-  "message": "Event created successfully",
-  "data": { /* event object */ }
+  "status": "published"  // "draft", "published", "cancelled", "completed"
 }
 ```
 
-### 2. Get All Events
-**GET** `/events?limit=20&skip=0&category=music&city=Lagos&eventType=concert`
-
-**Query Parameters:**
-- `limit`: Number of events to return (default: 20)
-- `skip`: Number of events to skip for pagination (default: 0)
-- `category`: Filter by category
-- `city`: Filter by city
-- `eventType`: Filter by event type
-
-**Response (200):**
+**Response:**
 ```json
 {
-  "status": "success",
-  "data": [ /* array of events */ ],
-  "pagination": {
-    "total": "number",
-    "limit": "number",
-    "skip": "number"
+  "success": true,
+  "message": "Event status updated successfully",
+  "data": {
+    "_id": "event_id_here",
+    "title": "Event Title",
+    "status": "published",
+    ...
   }
 }
 ```
 
-### 3. Get Single Event
-**GET** `/events/:eventId`
+#### Update Event (Creator only)
+```http
+PUT /api/events/id
+Authorization: Bearer <token>
+Content-Type: application/json
 
-**Response (200):**
-```json
 {
-  "status": "success",
-  "data": { /* event details */ }
+  "title": "Updated Event Title",
+  "description": "Updated description"
+  "category": "updated category"
 }
 ```
 
-### 4. Get Creator's Events
-**GET** `/events/user/my-events`
+#### Delete Event (Creator only)
+```http
+DELETE /api/events/id
+Authorization: Bearer <token>
+```
 
-**Headers:** `Authorization: Bearer <creator-token>`
+#### Get Share Links
+```http
+GET /api/events/id/share
+```
 
-**Response (200):**
-```json
+---
+
+### Tickets
+
+#### Get My Tickets (Eventee only)
+```http
+GET /api/tickets?page=1&limit=10
+Authorization: Bearer <token>
+```
+
+#### Get Ticket by ID (Eventee only)
+```http
+GET /api/tickets/id
+Authorization: Bearer <token>
+```
+
+#### Verify Ticket (Creator only)
+```http
+GET /api/tickets/verify/ticketNumber
+Authorization: Bearer <token>
+```
+### Ticket Verification (Creator only)
+
+#### Verify Ticket by Ticket Number and Event
+```http
+POST /api/tickets/verify
+Authorization: Bearer <token>
+Content-Type: application/json
+
 {
-  "status": "success",
-  "data": [ /* creator's events */ ]
+  "ticketNumber": "TKT-001-2026",
+  "eventId": "event_id_here"
 }
 ```
 
-### 5. Update Event (Creator Only)
-**PATCH** `/events/:eventId`
-
-**Headers:** `Authorization: Bearer <creator-token>`
-
-**Request Body:** (same as create event, all fields optional)
-
-### 6. Publish Event
-**POST** `/events/:eventId/publish`
-
-**Headers:** `Authorization: Bearer <creator-token>`
-
-**Response (200):**
+**Response:**
 ```json
 {
-  "status": "success",
-  "message": "Event published successfully"
-}
-```
-
-### 7. Cancel Event
-**POST** `/events/:eventId/cancel`
-
-**Headers:** `Authorization: Bearer <creator-token>`
-
-### 8. Get Event Analytics
-**GET** `/events/:eventId/analytics`
-
-**Headers:** `Authorization: Bearer <creator-token>`
-
-**Response (200):**
-```json
-{
-  "status": "success",
+  "success": true,
+  "message": "Ticket verified",
   "data": {
-    "totalTicketsSold": "number",
-    "totalRevenue": "number",
-    "totalAttendees": "number",
-    "totalQRScans": "number",
-    "conversionRate": "number",
-    "dailyStats": [ /* array of daily stats */ ]
+    "_id": "ticket_id",
+    "ticketNumber": "TKT-001-2026",
+    "status": "paid",
+    "event": {
+      "_id": "event_id",
+      "title": "Amazing Concert",
+      "startDate": "2026-02-14T20:00:00Z"
+    },
+    "user": {
+      "_id": "user_id",
+      "firstName": "John",
+      "lastName": "Doe",
+      "email": "john@example.com"
+    },
+    "qrCode": "data:image/png;base64,...",
+    "price": 5000,
+    "reminder": "1_day",
+    "scannedAt": null
   }
 }
 ```
 
-### 9. Share Event
-**GET** `/events/:eventId/share`
+#### Scan Ticket (Creator only)
+```http
+POST /api/tickets/scan/ticketNumber
+Authorization: Bearer <token>
+```
 
-**Response (200):**
+#### Mark Used Ticket (Creator only)
+```http
+PATCH /api/tickets/:id/mark-used
+Authorization: Bearer <token>
+```
+
+#### Update Ticket Reminder (Eventee only)
+```http
+PUT /api/tickets/id/reminder
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "reminder": "1_week"  // "1_hour", "1_day", "3_days", "1_week", "2_weeks"
+}
+```
+
+#### Get Event Attendees (Creator only)
+```http
+GET /api/tickets/event/eventId/attendees
+Authorization: Bearer <token>
+```
+
+---
+
+### Payments
+
+#### Initialize Payment (Eventee only)
+```http
+POST /api/payments/initialize
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "eventId": "event_id_here",
+  "reminder": "1_day"  // optional, defaults to event's default reminder
+}
+```
+
+**Response:**
 ```json
 {
-  "status": "success",
+  "success": true,
+  "message": "Payment initialized",
   "data": {
-    "shareLink": "string",
-    "platforms": {
-      "facebook": "string",
-      "twitter": "string",
-      "linkedin": "string",
-      "whatsapp": "string"
+    "paymentUrl": "https://checkout.paystack.com/...",
+    "reference": "REF-XXX-YYY",
+    "accessCode": "access_code_here"
+  }
+}
+```
+
+#### Verify Payment (Eventee only)
+```http
+POST /api/payments/verify
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "reference": "REF-XXX-YYY"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Payment verified and ticket issued",
+  "data": {
+    "payment": { ... },
+    "ticket": {
+      "ticketNumber": "TKT-XXX-YYY",
+      "qrCode": "data:image/png;base64,...",
+      "status": "paid"
     }
+  }
+}
+```
+
+#### Get My Payments (Eventee only)
+```http
+GET /api/payments
+Authorization: Bearer <token>
+```
+
+#### Get Event Payments (Creator only)
+```http
+GET /api/payments/event/eventId
+Authorization: Bearer <token>
+```
+
+---
+
+### Analytics
+
+#### Get Overall Analytics (Creator only)
+```http
+GET /api/analytics/overall
+Authorization: Bearer <token>
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "totalEvents": 10,
+    "totalAttendees": 500,
+    "totalTicketsSold": 500,
+    "ticketsScanned": 450,
+    "totalRevenue": 2500000,
+    "averageRevenuePerEvent": 250000
+  }
+}
+```
+
+#### Get Events Analytics (Creator only)
+```http
+GET /api/analytics/events
+Authorization: Bearer <token>
+```
+
+#### Get Event Analytics (Creator only)
+```http
+GET /api/analytics/events/eventId
+Authorization: Bearer <token>
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "event": { ... },
+    "metrics": {
+      "ticketsSold": 100,
+      "ticketsScanned": 85,
+      "revenue": 500000,
+      "attendanceRate": "85.00",
+      "salesRate": "10.00"
+    },
+    "dailySales": [
+      {
+        "_id": "2024-01-01",
+        "count": 10,
+        "revenue": 50000
+      }
+    ]
   }
 }
 ```
 
 ---
 
-## Ticket Endpoints
 
-### 1. Get User Tickets
-**GET** `/tickets`
 
-**Headers:** `Authorization: Bearer <eventee-token>`
+### Notifications
 
-**Response (200):**
-```json
+#### Create Notification
+```http
+POST /api/notifications
+Authorization: Bearer <token>
+Content-Type: application/json
+
 {
-  "status": "success",
-  "data": [ /* array of user tickets */ ]
-}
-```
-
-### 2. Get Ticket Details
-**GET** `/tickets/:ticketNumber`
-
-**Headers:** `Authorization: Bearer <token>`
-
-**Response (200):**
-```json
-{
-  "status": "success",
+  "title": "Important Update",
+  "message": "Your ticket has been confirmed for the event",
+  "type": "ticket",
   "data": {
-    "_id": "string",
-    "ticketNumber": "string",
-    "qrCode": "string",
-    "qrCodeImage": "string (data URL)",
-    "status": "valid|used|cancelled|refunded",
-    "price": "number",
-    "purchaseDate": "ISO-8601 date",
-    "usedAt": "ISO-8601 date (optional)"
+    "eventId": "event_id_here",
+    "ticketId": "ticket_id_here"
   }
 }
 ```
-
-### 3. Scan QR Code (Creator Only)
-**POST** `/tickets/:ticketNumber/scan`
-
-**Headers:** `Authorization: Bearer <creator-token>`
-
-**Response (200):**
-```json
-{
-  "status": "success",
-  "message": "QR code verified successfully",
-  "ticket": { /* ticket details */ }
-}
-```
-
-### 4. Get Event Tickets (Creator Only)
-**GET** `/tickets/events/:eventId`
-
-**Headers:** `Authorization: Bearer <creator-token>`
-
-**Response (200):**
-```json
-{
-  "status": "success",
-  "data": {
-    "tickets": [ /* array of tickets */ ],
-    "stats": {
-      "totalSold": "number",
-      "totalUsed": "number",
-      "totalRefunded": "number",
-      "usageRate": "number"
-    }
-  }
-}
-```
-
----
-
-## Payment Endpoints
-
-### 1. Initialize Payment
-**POST** `/payments/initialize`
-
-**Headers:** `Authorization: Bearer <eventee-token>`
 
 **Request Body:**
+- `title` (required) - Notification title
+- `message` (required) - Notification message
+- `type` (optional) - Notification type: `info`, `success`, `warning`, `error`, `event`, `payment`, `ticket` (default: `info`)
+- `data` (optional) - Additional data object with custom fields
+
+**Response:**
 ```json
 {
-  "email": "string",
-  "amount": "number (in Naira)",
-  "eventId": "string",
-  "ticketId": "string"
-}
-```
-
-**Response (200):**
-```json
-{
-  "status": "success",
-  "message": "Payment initialized successfully",
-  "data": {
-    "authorizationUrl": "string",
-    "reference": "string"
-  }
-}
-```
-
-### 2. Verify Payment
-**GET** `/payments/verify?reference=TXN-XXXXXXXX`
-
-**Response (200):**
-```json
-{
-  "status": "success",
-  "message": "Payment verified successfully",
-  "payment": { /* payment details */ }
-}
-```
-
-### 3. Get User Payments
-**GET** `/payments/user/my-payments`
-
-**Headers:** `Authorization: Bearer <eventee-token>`
-
-**Response (200):**
-```json
-{
-  "status": "success",
-  "data": [ /* array of user payments */ ]
-}
-```
-
-### 4. Get Event Payments (Creator Only)
-**GET** `/payments/events/:eventId`
-
-**Headers:** `Authorization: Bearer <creator-token>`
-
-**Response (200):**
-```json
-{
-  "status": "success",
-  "data": {
-    "payments": [ /* array of payments */ ],
-    "stats": {
-      "totalRevenue": "number",
-      "totalPayments": "number",
-      "averagePayment": "number"
-    }
-  }
-}
-```
-
-### 5. Refund Payment
-**POST** `/payments/:transactionId/refund`
-
-**Headers:** `Authorization: Bearer <token>`
-
-**Response (200):**
-```json
-{
-  "status": "success",
-  "message": "Payment refunded successfully"
-}
-```
-
----
-
-## Notification Endpoints
-
-### 1. Create Notification
-**POST** `/notifications`
-
-**Headers:** `Authorization: Bearer <token>`
-
-**Request Body:**
-```json
-{
-  "eventId": "string",
-  "type": "reminder|status_update|payment_confirmation|ticket_confirmation|cancellation",
-  "title": "string",
-  "message": "string",
-  "notificationChannels": ["email", "sms", "in_app"],
-  "scheduledFor": "ISO-8601 date (optional)"
-}
-```
-
-**Response (201):**
-```json
-{
-  "status": "success",
+  "success": true,
   "message": "Notification created successfully",
-  "data": { /* notification object */ }
+  "data": {
+    "_id": "notification_id",
+    "user": "user_id",
+    "title": "Important Update",
+    "message": "Your ticket has been confirmed for the event",
+    "type": "ticket",
+    "data": {
+      "eventId": "event_id_here",
+      "ticketId": "ticket_id_here"
+    },
+    "read": false,
+    "createdAt": "2024-01-15T10:30:00Z",
+    "updatedAt": "2024-01-15T10:30:00Z"
+  }
 }
 ```
 
-### 2. Get User Notifications
-**GET** `/notifications?limit=50`
-
-**Headers:** `Authorization: Bearer <token>`
+#### Get User's Notifications
+```http
+GET /api/notifications?page=1&limit=10&type=event&read=false
+Authorization: Bearer <token>
+```
 
 **Query Parameters:**
-- `limit`: Number of notifications to return (default: 50)
+- `page` - Page number (default: 1)
+- `limit` - Items per page (default: 10)
+- `type` - Filter by notification type (optional): `info`, `success`, `warning`, `error`, `event`, `payment`, `ticket`
+- `read` - Filter by read status (optional): `true` or `false`
 
-**Response (200):**
+**Response:**
 ```json
 {
-  "status": "success",
-  "data": [ /* array of notifications */ ]
+  "success": true,
+  "data": {
+    "notifications": [
+      {
+        "_id": "notification_id",
+        "user": "user_id",
+        "title": "Ticket Purchased",
+        "message": "You have successfully purchased a ticket for \"Concert Night\"",
+        "type": "ticket",
+        "data": {
+          "eventId": "event_id",
+          "ticketId": "ticket_id"
+        },
+        "read": false,
+        "createdAt": "2024-01-15T10:30:00Z",
+        "updatedAt": "2024-01-15T10:30:00Z"
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "limit": 10,
+      "total": 25,
+      "pages": 3
+    }
+  }
 }
 ```
 
-### 3. Mark Notification as Read
-**PATCH** `/notifications/:notificationId/read`
+#### Get Unread Notification Count
+```http
+GET /api/notifications/unread/count
+Authorization: Bearer <token>
+```
 
-**Headers:** `Authorization: Bearer <token>`
-
-**Response (200):**
+**Response:**
 ```json
 {
-  "status": "success",
-  "message": "Notification marked as read"
+  "success": true,
+  "data": {
+    "unreadCount": 5
+  }
 }
 ```
 
-### 4. Mark All Notifications as Read
-**PATCH** `/notifications/mark-all-read`
+#### Get Notification by ID
+```http
+GET /api/notifications/:id
+Authorization: Bearer <token>
+```
 
-**Headers:** `Authorization: Bearer <token>`
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "_id": "notification_id",
+    "user": "user_id",
+    "title": "Ticket Purchased",
+    "message": "You have successfully purchased a ticket",
+    "type": "ticket",
+    "data": {},
+    "read": false,
+    "createdAt": "2024-01-15T10:30:00Z",
+    "updatedAt": "2024-01-15T10:30:00Z"
+  }
+}
+```
+
+#### Mark Notification as Read
+```http
+PATCH /api/notifications/:id/read
+Authorization: Bearer <token>
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Notification marked as read",
+  "data": { ... }
+}
+```
+
+#### Mark All Notifications as Read
+```http
+PATCH /api/notifications/read/all
+Authorization: Bearer <token>
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "All notifications marked as read",
+  "data": {
+    "modifiedCount": 5
+  }
+}
+```
+
+#### Delete Notification
+```http
+DELETE /api/notifications/:id
+Authorization: Bearer <token>
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Notification deleted successfully"
+}
+```
+
+#### Delete All Notifications
+```http
+DELETE /api/notifications
+Authorization: Bearer <token>
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "All notifications deleted",
+  "data": {
+    "deletedCount": 25
+  }
+}
+```
+
+#### Clear Read Notifications
+```http
+DELETE /api/notifications/clear/read
+Authorization: Bearer <token>
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Read notifications cleared",
+  "data": {
+    "deletedCount": 15
+  }
+}
+```
 
 ---
 
-## Error Responses
+## Status Codes
 
-### 400 Bad Request
-```json
-{
-  "status": "error",
-  "message": "Missing required fields"
-}
-```
-
-### 401 Unauthorized
-```json
-{
-  "status": "error",
-  "message": "No token provided"
-}
-```
-
-### 403 Forbidden
-```json
-{
-  "status": "error",
-  "message": "Insufficient permissions"
-}
-```
-
-### 404 Not Found
-```json
-{
-  "status": "error",
-  "message": "Resource not found"
-}
-```
-
-### 500 Internal Server Error
-```json
-{
-  "status": "error",
-  "message": "Internal server error"
-}
-```
-
----
+- `200` - Success
+- `201` - Created
+- `400` - Bad Request
+- `401` - Unauthorized
+- `403` - Forbidden
+- `404` - Not Found
+- `409` - Conflict
+- `429` - Too Many Requests (Rate Limited)
+- `500` - Internal Server Error
 
 ## Rate Limiting
 
-- General rate limit: 100 requests per 15 seconds
-- Auth endpoints: 5 attempts per 15 minutes
+- General API: 100 requests per 15 minutes
+- Authentication: 5 requests per 15 minutes
+- Payment: 10 requests per hour
+- QR Scanning: 30 requests per minute
 
-Rate limit headers:
-- `X-RateLimit-Limit`: Maximum requests allowed
-- `X-RateLimit-Remaining`: Requests remaining
-- `X-RateLimit-Reset`: Time when limit resets
-
----
-
-## Best Practices
-
-1. **Always include error handling** in your client application
-2. **Cache event data** on the client side when possible
-3. **Use pagination** for large result sets
-4. **Implement token refresh** mechanism for long-lived sessions
-5. **Validate user input** before sending to API
-6. **Handle rate limit errors** gracefully
-
----
-
-## Example Usage
-
-### Register and Create Event
-```bash
-# 1. Register
-curl -X POST http://localhost:5000/api/auth/signup \
-  -H "Content-Type: application/json" \
-  -d '{
-    "firstName": "Jane",
-    "lastName": "Smith",
-    "email": "jane@example.com",
-    "password": "SecurePass123",
-    "phone": "+2348012345678",
-    "role": "creator"
-  }'
-
-# 2. Create Event
-curl -X POST http://localhost:5000/api/events \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer <token>" \
-  -d '{
-    "title": "Tech Conference 2026",
-    "description": "Annual technology conference",
-    "eventType": "conference",
-    "startDate": "2026-06-01T09:00:00Z",
-    "endDate": "2026-06-03T17:00:00Z",
-    "location": {
-      "address": "123 Tech Drive",
-      "city": "Lagos",
-      "state": "Lagos",
-      "zipCode": "100001",
-      "country": "Nigeria"
-    },
-    "capacity": 500,
-    "ticketPrice": 10000,
-    "category": "education"
-  }'
+## Error Response Format
+```json
+{
+  "success": false,
+  "message": "Error message here",
+  "error": "Detailed error (development only)"
+}
 ```
 
----
+## Success Response Format
+```json
+{
+  "success": true,
+  "message": "Success message",
+  "data": { ... }
+}
+```
 
-## Support
-For issues and questions, please contact support@eventful.com
+## Pagination
+Paginated endpoints accept:
+- `page` - Page number (default: 1)
+- `limit` - Items per page (default: 10)
+
+Response includes:
+```json
+{
+  "success": true,
+  "data": {
+    "items": [ ... ],
+    "pagination": {
+      "page": 1,
+      "limit": 10,
+      "total": 100,
+      "pages": 10
+    }
+  }
+}
+```
+
+## Enums
+
+### User Roles
+- `creator` - Event creator
+- `eventee` - Event attendee
+
+### Event Status
+- `draft` - Not published yet
+- `published` - Live and accepting bookings
+- `cancelled` - Event cancelled
+- `completed` - Event finished
+
+### Ticket Status
+- `pending` - Payment pending
+- `paid` - Payment successful
+- `cancelled` - Ticket cancelled
+- `used` - Ticket scanned at event
+
+### Payment Status
+- `pending` - Payment initiated
+- `success` - Payment successful
+- `failed` - Payment failed
+- `refunded` - Payment refunded
+
+### Reminder Periods
+- `1_hour` - 1 hour before event
+- `1_day` - 1 day before event
+- `3_days` - 3 days before event
+- `1_week` - 1 week before event
+- `2_weeks` - 2 weeks before event
+
+### Notification Types
+- `info` - General information
+- `success` - Success messages
+- `warning` - Warning messages
+- `error` - Error notifications
+- `event` - Event-related notifications
+- `payment` - Payment notifications
+- `ticket` - Ticket-related notifications
+
+## Social Media Sharing
+
+The `/api/events/:id/share` endpoint returns pre-formatted share links:
+
+```json
+{
+  "success": true,
+  "data": {
+    "eventUrl": "http://localhost:3000/events/123",
+    "shareLinks": {
+      "facebook": "https://www.facebook.com/sharer/sharer.php?u=...",
+      "twitter": "https://twitter.com/intent/tweet?text=...&url=...",
+      "linkedin": "https://www.linkedin.com/sharing/share-offsite/?url=...",
+      "whatsapp": "https://wa.me/?text=...",
+      "email": "mailto:?subject=...&body=..."
+    }
+  }
+}
+```
+
+## QR Code Format
+
+QR codes contain JSON data:
+```json
+{
+  "ticketNumber": "TKT-XXX-YYY",
+  "eventId": "event_id_here",
+  "userId": "user_id_here",
+  "eventTitle": "Event Name"
+}
+```
+
+## Caching
+
+The API uses Redis caching for:
+- Event listings (5 minutes)
+- Individual events (10 minutes)
+- Creator events (automatic invalidation on updates)
+
+Cache is automatically invalidated on data updates.
+
+## Email Notifications
+
+The system automatically sends emails for:
+- Welcome (on registration)
+- Ticket confirmation (with QR code attachment)
+- Event reminders (based on reminder settings)
+- Payment confirmation
+
+## Reminder System
+
+- Reminders are scheduled based on the reminder period
+- Eventees can change their reminder preferences per ticket
+- Reminder emails include event details and ticket information
+- System checks for pending reminders every 5 minutes

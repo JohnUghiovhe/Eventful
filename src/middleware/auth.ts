@@ -1,54 +1,37 @@
-import { Request, Response, NextFunction } from 'express';
-import JWTService, { IDecodedToken } from '../utils/jwt';
+import { Response, NextFunction } from 'express';
+import passport from 'passport';
+import { AuthRequest, UserRole } from '../types';
 
-export interface AuthenticatedRequest extends Request {
-  user?: IDecodedToken;
-  userId?: string;
-}
-
-export const authenticateToken = async (
-  req: AuthenticatedRequest,
+export const authenticate = (
+  req: AuthRequest,
   res: Response,
   next: NextFunction
-): Promise<void> => {
-  try {
-    const token = req.headers.authorization?.split(' ')[1];
-
-    if (!token) {
-      res.status(401).json({
-        status: 'error',
-        message: 'No token provided',
-      });
+): void => {
+  passport.authenticate('jwt', { session: false }, (err: any, user: any) => {
+    if (err) {
+      res.status(500).json({ success: false, message: 'Authentication error' });
       return;
     }
-
-    const decoded = JWTService.verifyToken(token);
-    req.user = decoded;
-    req.userId = decoded.userId;
-
+    if (!user) {
+      res.status(401).json({ success: false, message: 'Unauthorized' });
+      return;
+    }
+    req.user = user;
     next();
-  } catch (error) {
-    res.status(403).json({
-      status: 'error',
-      message: 'Invalid or expired token',
-    });
-  }
+  })(req, res, next);
 };
 
-export const authorizeRole = (...allowedRoles: Array<'creator' | 'eventee'>) => {
-  return (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
+export const authorize = (...roles: UserRole[]) => {
+  return (req: AuthRequest, res: Response, next: NextFunction): void => {
     if (!req.user) {
-      res.status(401).json({
-        status: 'error',
-        message: 'Unauthorized',
-      });
+      res.status(401).json({ success: false, message: 'Unauthorized' });
       return;
     }
 
-    if (!allowedRoles.includes(req.user.role)) {
+    if (!roles.includes(req.user.role)) {
       res.status(403).json({
-        status: 'error',
-        message: 'Forbidden: Insufficient permissions',
+        success: false,
+        message: 'Forbidden: Insufficient permissions'
       });
       return;
     }
@@ -57,29 +40,6 @@ export const authorizeRole = (...allowedRoles: Array<'creator' | 'eventee'>) => 
   };
 };
 
-export const optionalAuth = async (
-  req: AuthenticatedRequest,
-  _res: Response,
-  next: NextFunction
-): Promise<void> => {
-  try {
-    const token = req.headers.authorization?.split(' ')[1];
-
-    if (token) {
-      const decoded = JWTService.verifyToken(token);
-      req.user = decoded;
-      req.userId = decoded.userId;
-    }
-
-    next();
-  } catch (error) {
-    // If token is invalid, continue without authentication
-    next();
-  }
-};
-
-export default {
-  authenticateToken,
-  authorizeRole,
-  optionalAuth,
-};
+export const isCreator = authorize(UserRole.CREATOR);
+export const isEventee = authorize(UserRole.EVENTEE);
+export const isCreatorOrEventee = authorize(UserRole.CREATOR, UserRole.EVENTEE);

@@ -1,97 +1,67 @@
-import express, { Express, Request, Response } from 'express';
+import express, { Application } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
-import path from 'path';
-
-import { connectToMongoDB } from './config/database';
-import { connectToRedis } from './config/redis';
-import config from './config/environment';
-
-import authRoutes from './routes/authRoutes';
-import eventRoutes from './routes/eventRoutes';
-import ticketRoutes from './routes/ticketRoutes';
-import paymentRoutes from './routes/paymentRoutes';
-import notificationRoutes from './routes/notificationRoutes';
-
-import { errorHandler } from './utils/errors';
+import { connectDB } from './config/database';
+import { connectRedis } from './config/redis';
+import passport from './config/passport';
+import routes from './routes';
+import { errorHandler } from './middleware/errorHandler';
+import { NotificationService } from './services/notification.service';
+import { Logger } from './utils/logger';
+import { seedEvents } from './scripts/seed';
+import { fixPaymentIndex } from './scripts/fixPaymentIndex';
 
 dotenv.config();
 
-const app: Express = express();
+const app: Application = express();
+const PORT = process.env.PORT || 5000;
 
-// Middleware setup
+// Middleware
 app.use(helmet());
-app.use(cors());
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ limit: '10mb', extended: true }));
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  credentials: true
+}));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// Serve static files from public folder
-app.use(express.static(path.join(__dirname, '../public')));
-
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: config.RATE_LIMIT_WINDOW_MS,
-  max: config.RATE_LIMIT_MAX_REQUESTS,
-  message: 'Too many requests from this IP, please try again later.',
-});
-
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5,
-  message: 'Too many authentication attempts, please try again later.',
-});
-
-app.use(limiter);
-
-// Serve index.html for root path
-app.get('/', (_req: Request, res: Response) => {
-  res.sendFile(path.join(__dirname, '../public/index.html'));
-});
+// Passport middleware
+app.use(passport.initialize());
 
 // Routes
-app.get('/health', (_req: Request, res: Response) => {
-  res.json({
-    status: 'ok',
-    message: 'Eventful API is running',
-    timestamp: new Date().toISOString(),
-  });
-});
+app.use('/api', routes);
 
-app.use('/api/auth', authLimiter, authRoutes);
-app.use('/api/events', eventRoutes);
-app.use('/api/tickets', ticketRoutes);
-app.use('/api/payments', paymentRoutes);
-app.use('/api/notifications', notificationRoutes);
-
-// 404 handler
-app.use((_req: Request, res: Response) => {
-  res.status(404).json({
-    status: 'error',
-    message: 'Route not found',
-  });
-});
-
-// Error handler
+// Error handler (must be last)
 app.use(errorHandler);
 
-// Database and Redis connection
-async function startServer() {
+// Start server
+const startServer = async () => {
   try {
-    await connectToMongoDB();
-    await connectToRedis();
+    // Connect to MongoDB
+    await connectDB();
 
-    const PORT = config.PORT || 5000;
+    // Connect to Redis
+    await connectRedis();
+
+    // Fix any payment index issues
+    await fixPaymentIndex();
+
+    // Seed sample events
+    await seedEvents();
+
+    // Start notification scheduler
+    NotificationService.startScheduler();
+
     app.listen(PORT, () => {
-      console.log(`✓ Server running on port ${PORT}`);
-      console.log(`✓ Environment: ${config.NODE_ENV}`);
+      Logger.info(`🚀 Server is running on port ${PORT}`);
+      Logger.info(`📚 API Documentation: http://localhost:${PORT}/api/health`);
     });
   } catch (error) {
-    console.error('Failed to start server:', error);
+    Logger.error('Failed to start server:', error);
     process.exit(1);
   }
-}
+};
 
 startServer();
 

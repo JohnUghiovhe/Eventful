@@ -1,88 +1,75 @@
-import { Schema, Document, Model, model, Types } from 'mongoose';
-
-export interface IPayment extends Document {
-  payerId: Types.ObjectId;
-  eventId: Types.ObjectId;
-  ticketId: Types.ObjectId;
-  amount: number;
-  currency: string;
-  paymentMethod: 'paystack' | 'card' | 'bank_transfer';
-  status: 'pending' | 'completed' | 'failed' | 'refunded';
-  paystackReference?: string;
-  paystackAuthorizationUrl?: string;
-  transactionId: string;
-  description: string;
-  paidAt?: Date;
-  refundedAt?: Date;
-  refundReason?: string;
-  metadata?: Record<string, any>;
-  createdAt: Date;
-  updatedAt: Date;
-}
+import mongoose, { Schema } from 'mongoose';
+import { IPayment, PaymentStatus } from '../types';
 
 const paymentSchema = new Schema<IPayment>(
   {
-    payerId: {
-      type: Schema.Types.ObjectId,
+    reference: {
+      type: String,
+      required: true
+    },
+    user: {
+      type: String,
       ref: 'User',
-      required: [true, 'Payer ID is required'],
+      required: true
     },
-    eventId: {
-      type: Schema.Types.ObjectId,
+    event: {
+      type: String,
       ref: 'Event',
-      required: [true, 'Event ID is required'],
+      required: true
     },
-    ticketId: {
-      type: Schema.Types.ObjectId,
-      ref: 'Ticket',
-      required: [true, 'Ticket ID is required'],
+    ticket: {
+      type: String,
+      ref: 'Ticket'
     },
     amount: {
       type: Number,
-      required: [true, 'Amount is required'],
-      min: [0, 'Amount cannot be negative'],
+      required: true
     },
     currency: {
       type: String,
-      default: 'NGN',
-      enum: ['NGN', 'USD', 'EUR', 'GBP'],
-    },
-    paymentMethod: {
-      type: String,
-      enum: ['paystack', 'card', 'bank_transfer'],
-      default: 'paystack',
+      default: 'NGN'
     },
     status: {
       type: String,
-      enum: ['pending', 'completed', 'failed', 'refunded'],
-      default: 'pending',
+      enum: Object.values(PaymentStatus),
+      default: PaymentStatus.PENDING
     },
-    paystackReference: String,
-    paystackAuthorizationUrl: String,
-    transactionId: {
+    paystackReference: {
       type: String,
-      required: [true, 'Transaction ID is required'],
-      unique: true,
+      required: true
     },
-    description: {
-      type: String,
-      required: [true, 'Payment description is required'],
+    paystackResponse: {
+      type: Schema.Types.Mixed,
+      default: null
     },
-    paidAt: Date,
-    refundedAt: Date,
-    refundReason: String,
-    metadata: Schema.Types.Mixed,
+    metadata: {
+      type: Schema.Types.Mixed,
+      default: null
+    }
   },
   {
-    timestamps: true,
+    timestamps: true
   }
 );
 
-// Indexes (transactionId already has unique: true)
-paymentSchema.index({ payerId: 1 });
-paymentSchema.index({ eventId: 1 });
+// Indexes with proper configuration
+// Reference must be unique (no duplicate payments for same txn)
+paymentSchema.index({ reference: 1 }, { unique: true });
+// Composite index for querying user payments for specific event
+paymentSchema.index({ user: 1, event: 1 });
+// Index for status queries
 paymentSchema.index({ status: 1 });
-paymentSchema.index({ paystackReference: 1 });
-paymentSchema.index({ createdAt: 1 });
+// Index for payment verification by paystackReference
+paymentSchema.index({ paystackReference: 1 }, { sparse: true });
+// Add expire index for pending payments after 24 hours
+paymentSchema.index(
+  { createdAt: 1 },
+  {
+    expireAfterSeconds: 86400,
+    partialFilterExpression: { status: PaymentStatus.PENDING }
+  }
+);
 
-export const Payment: Model<IPayment> = model<IPayment>('Payment', paymentSchema);
+const Payment = mongoose.model<IPayment>('Payment', paymentSchema);
+
+export default Payment;

@@ -1,95 +1,67 @@
-import { Schema, Document, Model, model, Types } from 'mongoose';
-
-export interface ITicket extends Document {
-  eventId: Types.ObjectId;
-  buyerId: Types.ObjectId;
-  ticketNumber: string;
-  status: 'valid' | 'used' | 'cancelled' | 'refunded';
-  qrCode: string;
-  qrCodeImage?: string;
-  purchaseDate: Date;
-  usedAt?: Date;
-  price: number;
-  quantity: number;
-  reminderSettings?: {
-    remindAt?: Array<{
-      type: 'email' | 'sms';
-      timeBefore: number; // in hours
-      sent: boolean;
-    }>;
-  };
-  createdAt: Date;
-  updatedAt: Date;
-}
+import mongoose, { Schema } from 'mongoose';
+import { ITicket, TicketStatus, ReminderPeriod } from '../types';
 
 const ticketSchema = new Schema<ITicket>(
   {
-    eventId: {
-      type: Schema.Types.ObjectId,
-      ref: 'Event',
-      required: [true, 'Event ID is required'],
-    },
-    buyerId: {
-      type: Schema.Types.ObjectId,
-      ref: 'User',
-      required: [true, 'Buyer ID is required'],
-    },
     ticketNumber: {
       type: String,
-      required: [true, 'Ticket number is required'],
-      unique: true,
+      required: true,
+      unique: true
     },
-    status: {
+    event: {
       type: String,
-      enum: ['valid', 'used', 'cancelled', 'refunded'],
-      default: 'valid',
+      ref: 'Event',
+      required: true
+    },
+    user: {
+      type: String,
+      ref: 'User',
+      required: true
     },
     qrCode: {
       type: String,
-      required: [true, 'QR code is required'],
+      required: true
     },
-    qrCodeImage: String,
+    qrCodeData: {
+      type: String,
+      required: true
+    },
+    status: {
+      type: String,
+      enum: Object.values(TicketStatus),
+      default: TicketStatus.PENDING
+    },
     purchaseDate: {
       type: Date,
-      default: Date.now,
+      default: Date.now
     },
-    usedAt: Date,
+    scannedAt: {
+      type: Date
+    },
+    reminder: {
+      type: String,
+      enum: Object.values(ReminderPeriod),
+      required: true
+    },
     price: {
       type: Number,
-      required: [true, 'Ticket price is required'],
-      min: [0, 'Price cannot be negative'],
+      required: true
     },
-    quantity: {
-      type: Number,
-      required: [true, 'Ticket quantity is required'],
-      min: [1, 'Quantity must be at least 1'],
-    },
-    reminderSettings: {
-      remindAt: [
-        {
-          type: {
-            type: String,
-            enum: ['email', 'sms'],
-          },
-          timeBefore: Number, // in hours
-          sent: {
-            type: Boolean,
-            default: false,
-          },
-        },
-      ],
-    },
+    payment: {
+      type: String,
+      ref: 'Payment',
+      required: true
+    }
   },
   {
-    timestamps: true,
+    timestamps: true
   }
 );
 
-// Indexes for faster queries
-ticketSchema.index({ buyerId: 1 });
+// Indexes
+ticketSchema.index({ event: 1, user: 1 });
 ticketSchema.index({ status: 1 });
-ticketSchema.index({ qrCode: 1 });
-ticketSchema.index({ purchaseDate: 1 });
-ticketSchema.index({ eventId: 1, status: 1 }); // Compound index
 
-export const Ticket: Model<ITicket> = model<ITicket>('Ticket', ticketSchema);
+const Ticket = mongoose.model<ITicket>('Ticket', ticketSchema);
+
+export default Ticket;

@@ -1,37 +1,77 @@
-import { createClient, RedisClientType } from 'redis';
-import config from './environment';
+import { createClient } from 'redis';
+import dotenv from 'dotenv';
 
-let redisClient: RedisClientType;
+dotenv.config();
 
-export async function connectToRedis(): Promise<RedisClientType> {
-  redisClient = createClient({
-    socket: {
-      host: config.REDIS_HOST,
-      port: config.REDIS_PORT,
-      reconnectStrategy: (retries) => Math.min(retries * 50, 500),
-    },
-    password: config.REDIS_PASSWORD,
-  });
+const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
 
-  redisClient.on('error', (err) => console.error('Redis Client Error', err));
-  redisClient.on('connect', () => console.log('✓ Connected to Redis'));
+const redisClient = createClient({
+  url: REDIS_URL
+});
 
-  await redisClient.connect();
-  return redisClient;
-}
+redisClient.on('error', (err) => {
+  console.error('❌ Redis Client Error:', err);
+});
 
-export function getRedisClient(): RedisClientType {
-  if (!redisClient) {
-    throw new Error('Redis client not initialized. Call connectToRedis first.');
+redisClient.on('connect', () => {
+  console.log('✅ Redis connected successfully');
+});
+
+export const connectRedis = async (): Promise<void> => {
+  try {
+    await redisClient.connect();
+  } catch (error) {
+    console.error('❌ Redis connection error:', error);
+    // Don't exit process, allow app to run without cache
   }
-  return redisClient;
-}
+};
 
-export async function disconnectFromRedis(): Promise<void> {
-  if (redisClient) {
-    await redisClient.disconnect();
-    console.log('✓ Disconnected from Redis');
+export const getCache = async (key: string): Promise<string | null> => {
+  try {
+    if (!redisClient.isOpen) return null;
+    return await redisClient.get(key);
+  } catch (error) {
+    console.error('Redis get error:', error);
+    return null;
   }
-}
+};
 
-export default getRedisClient;
+export const setCache = async (
+  key: string,
+  value: string,
+  expirationInSeconds?: number
+): Promise<void> => {
+  try {
+    if (!redisClient.isOpen) return;
+    if (expirationInSeconds) {
+      await redisClient.setEx(key, expirationInSeconds, value);
+    } else {
+      await redisClient.set(key, value);
+    }
+  } catch (error) {
+    console.error('Redis set error:', error);
+  }
+};
+
+export const delCache = async (key: string): Promise<void> => {
+  try {
+    if (!redisClient.isOpen) return;
+    await redisClient.del(key);
+  } catch (error) {
+    console.error('Redis delete error:', error);
+  }
+};
+
+export const clearCacheByPattern = async (pattern: string): Promise<void> => {
+  try {
+    if (!redisClient.isOpen) return;
+    const keys = await redisClient.keys(pattern);
+    if (keys.length > 0) {
+      await redisClient.del(keys);
+    }
+  } catch (error) {
+    console.error('Redis clear pattern error:', error);
+  }
+};
+
+export default redisClient;

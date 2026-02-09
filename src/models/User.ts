@@ -1,118 +1,65 @@
-import { Schema, Document, Model, model } from 'mongoose';
-import bcryptjs from 'bcryptjs';
-
-export interface IUser extends Document {
-  firstName: string;
-  lastName: string;
-  email: string;
-  password: string;
-  phone: string;
-  profileImage?: string;
-  role: 'creator' | 'eventee';
-  isEmailVerified: boolean;
-  isPhoneVerified: boolean;
-  bio?: string;
-  socialLinks?: {
-    facebook?: string;
-    twitter?: string;
-    instagram?: string;
-    linkedin?: string;
-  };
-  createdAt: Date;
-  updatedAt: Date;
-  comparePassword(password: string): Promise<boolean>;
-}
+import mongoose, { Schema } from 'mongoose';
+import bcrypt from 'bcryptjs';
+import { IUser, UserRole } from '../types';
 
 const userSchema = new Schema<IUser>(
   {
-    firstName: {
-      type: String,
-      required: [true, 'First name is required'],
-      trim: true,
-    },
-    lastName: {
-      type: String,
-      required: [true, 'Last name is required'],
-      trim: true,
-    },
     email: {
       type: String,
-      required: [true, 'Email is required'],
+      required: true,
       unique: true,
       lowercase: true,
-      match: [
-        /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
-        'Please provide a valid email',
-      ],
+      trim: true
     },
     password: {
       type: String,
-      required: [true, 'Password is required'],
-      minlength: [6, 'Password must be at least 6 characters'],
-      select: false,
+      required: true,
+      minlength: 6
     },
-    phone: {
+    firstName: {
       type: String,
-      required: [true, 'Phone number is required'],
-      match: [/^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/, 'Please provide a valid phone number'],
+      required: true,
+      trim: true
     },
-    profileImage: {
+    lastName: {
       type: String,
-      default: null,
+      required: true,
+      trim: true
     },
     role: {
       type: String,
-      enum: ['creator', 'eventee'],
-      default: 'eventee',
+      enum: Object.values(UserRole),
+      required: true
     },
-    isEmailVerified: {
-      type: Boolean,
-      default: false,
+    profileImage: {
+      type: String
     },
-    isPhoneVerified: {
-      type: Boolean,
-      default: false,
-    },
-    bio: {
-      type: String,
-      default: null,
-      maxlength: [500, 'Bio cannot exceed 500 characters'],
-    },
-    socialLinks: {
-      facebook: String,
-      twitter: String,
-      instagram: String,
-      linkedin: String,
-    },
+    phoneNumber: {
+      type: String
+    }
   },
   {
-    timestamps: true,
+    timestamps: true
   }
 );
 
-// Index for faster queries (email already has unique: true)
-userSchema.index({ role: 1 });
-
-// Pre-save middleware to hash password
-userSchema.pre('save', async function (this: IUser, next: any) {
+// Hash password before saving
+userSchema.pre('save', async function () {
   if (!this.isModified('password')) {
-    return next();
+    return;
   }
 
-  try {
-    const salt = await bcryptjs.genSalt(10);
-    this.password = await bcryptjs.hash(this.password, salt);
-    next();
-  } catch (error) {
-    next(error as Error);
-  }
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
 });
 
-// Method to compare passwords
+// Compare password method
 userSchema.methods.comparePassword = async function (
-  password: string
+  candidatePassword: string
 ): Promise<boolean> {
-  return bcryptjs.compare(password, this.password);
+  return bcrypt.compare(candidatePassword, this.password);
 };
 
-export const User: Model<IUser> = model<IUser>('User', userSchema);
+const User = mongoose.model<IUser>('User', userSchema);
+
+export default User;
