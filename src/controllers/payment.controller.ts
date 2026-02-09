@@ -1,0 +1,333 @@
+import { Response } from 'express';
+import Payment from '../models/Payment';
+import Ticket from '../models/Ticket';
+import Event from '../models/Event';
+import User from '../models/User';
+import { AuthRequest, PaymentStatus, TicketStatus } from '../types';
+import { PaymentService } from '../services/payment.service';
+import { QRCodeService } from '../services/qrcode.service';
+import { EmailService } from '../services/email.service';
+import { NotificationService } from '../services/notification.service';
+import { Logger } from '../utils/logger';
+import {
+  generateTicketNumber,
+  generateReference,
+  calculateReminderDate
+} from '../utils/helpers';
+
+export class PaymentController {
+  /**
+   * Initialize payment for ticket purchase
+   */
+  static async initializePayment(req: AuthRequest, res: Response): Promise<void> {
+    try {
+      const { eventId, reminder } = req.body;
+
+      // Validate input
+      if (!eventId) {
+        res.status(400).json({
+          success: false,
+          message: 'Event ID is required'
+        });
+        return;
+      }
+
+      // Check authentication
+      if (!req.user || !req.user.id) {
+        res.status(401).json({
+          success: false,
+          message: 'Authentication required. Please login to purchase tickets.'
+        });
+        return;
+      }
+
+      // Get event details
+      const event = await Event.findById(eventId);
+      if (!event) {
+        res.status(404).json({
+          success: false,
+          message: 'Event not found. The event may have been removed.'
+        });
+        return;
+      }
+
+      // Check event status
+      if (event.status !== 'published') {
+        res.status(400).json({
+          success: false,
+          message: 'This event is not available for ticket purchase'
+        });
+        return;
+      }
+
+      // Check ticket availability
+      if (event.availableTickets <= 0) {
+        res.status(400).json({
+          success: false,
+          message: 'Sorry, no tickets are available for this event'
+        });
+        return;
+      }
+
+      // Get user details
+      const user = await User.findById(req.user.id);
+      if (!user) {
+        res.status(404).json({
+          success: false,
+          message: 'User account not found. Please try logging in again.'
+        });
+        return;
+      }
+
+      Logger.info(`Initializing payment for user ${user.email} for event ${event.title}`);
+
+      // Generate references
+      const reference = generateReference();
+      const ticketNumber = generateTicketNumber();
+
+      // Create payment record
+      const payment: any = await Payment.create({
+        reference,
+        user: user._id.toString(),
+        event: event._id.toString(),
+        amount: event.ticketPrice,
+        currency: 'NGN',
+        status: PaymentStatus.PENDING,
+        paystackReference: reference,
+        metadata: {
+          ticketNumber,
+          reminder: reminder || event.defaultReminder
+        }
+      });
+
+      Logger.info(`Payment record created with reference ${reference}`, { paymentId: payment._id });
+
+      // Initialize Paystack payment
+      const paystackResponse = await PaymentService.initializePayment(
+        user.email,
+        event.ticketPrice,
+        reference,
+        {
+          eventId: event._id,
+          eventTitle: event.title,
+          ticketNumber,
+          userId: user._id
+        }
+      );
+
+      Logger.info(`Paystack response received for ${reference}`, { status: paystackResponse.status });
+
+      // Update payment with Paystack response
+      payment.paystackResponse = paystackResponse;
+      await payment.save();
+
+      res.status(200).json({
+        success: true,
+        message: 'Payment initialized successfully',
+        data: {
+          paymentUrl: paystackResponse.data.authorization_url,
+          reference: paystackResponse.data.reference,
+          accessCode: paystackResponse.data.access_code
+        }
+      });
+    } catch (error: any) {
+      Logger.error('Initialize payment error:', error);
+      res.status(500).json({
+        success: false,
+        message: error.message || 'Failed to initialize payment. Please try again.',
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  }
+
+  /**
+   * Verify payment and issue ticket
+   */
+  static async verifyPayment(req: AuthRequest, res: Response): Promise<void> {
+    try {
+      const { reference } = req.body;
+
+      // Get payment record
+      const payment = await Payment.findOne({ reference }).populate('event');
+      if (!payment) {
+        res.status(404).json({
+          success: false,
+          message: 'Payment not found'
+        });
+        return;
+      }
+
+      // Check if already verified
+      if (payment.status === PaymentStatus.SUCCESS) {
+        const ticket = await Ticket.findOne({ payment: payment._id.toString() } as any);
+        res.status(200).json({
+          success: true,
+          message: 'Payment already verified',
+          data: { payment, ticket }
+        });
+        return;
+      }
+
+      // Verify with Paystack
+      const paystackResponse = await PaymentService.verifyPayment(reference);
+
+      if (paystackResponse.data.status !== 'success') {
+        payment.status = PaymentStatus.FAILED;
+        await payment.save();
+
+        res.status(400).json({
+          success: false,
+          message: 'Payment verification failed'
+        });
+        return;
+      }
+
+      // Update payment status
+      payment.status = PaymentStatus.SUCCESS;
+      payment.paystackResponse = paystackResponse;
+      await payment.save();
+
+      // Get event and user
+      const event: any = payment.event;
+      const user = await User.findById(payment.user);
+
+      // Generate QR code
+      const qrCodeData = {
+        ticketNumber: payment.metadata.ticketNumber,
+        eventId: event._id.toString(),
+        userId: payment.user.toString(),
+        eventTitle: event.title
+      };
+
+      const qrCode = await QRCodeService.generateQRCode(qrCodeData);
+
+      // Create ticket
+      const ticket: any = await Ticket.create({
+        ticketNumber: payment.metadata.ticketNumber,
+        event: event._id,
+        user: payment.user,
+        qrCode,
+        qrCodeData: JSON.stringify(qrCodeData),
+        status: TicketStatus.PAID,
+        price: payment.amount,
+        payment: payment._id.toString(),
+        reminder: payment.metadata.reminder || event.defaultReminder
+      });
+
+      // Update payment with ticket reference
+      payment.ticket = ticket._id;
+      await payment.save();
+
+      // Update event available tickets
+      event.availableTickets -= 1;
+      await event.save();
+
+      // Create reminder
+      const reminderDate = calculateReminderDate(
+        event.startDate,
+        ticket.reminder
+      );
+      await NotificationService.createReminder(
+        payment.user.toString(),
+        event._id.toString(),
+        ticket._id.toString(),
+        reminderDate
+      );
+
+      // Send confirmation email
+      await EmailService.sendTicketConfirmation(user!.email, {
+        eventTitle: event.title,
+        ticketNumber: ticket.ticketNumber,
+        eventDate: event.startDate.toLocaleString(),
+        venue: event.venue,
+        qrCode
+      });
+
+      res.status(200).json({
+        success: true,
+        message: 'Payment verified and ticket issued',
+        data: {
+          payment,
+          ticket
+        }
+      });
+    } catch (error: any) {
+      Logger.error('Verify payment error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to verify payment',
+        error: error.message
+      });
+    }
+  }
+
+  /**
+   * Get user's payment history
+   */
+  static async getMyPayments(req: AuthRequest, res: Response): Promise<void> {
+    try {
+      const payments = await Payment.find({ user: req.user!.id })
+        .populate('event', 'title startDate venue images')
+        .populate('ticket', 'ticketNumber status')
+        .sort({ createdAt: -1 });
+
+      res.status(200).json({
+        success: true,
+        data: payments
+      });
+    } catch (error: any) {
+      Logger.error('Get my payments error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to fetch payments'
+      });
+    }
+  }
+
+  /**
+   * Get event payments (Creator only)
+   */
+  static async getEventPayments(req: AuthRequest, res: Response): Promise<void> {
+    try {
+      const { eventId } = req.params;
+
+      // Verify event ownership
+      const event = await Event.findOne({
+        _id: eventId,
+        creator: req.user!.id
+      });
+
+      if (!event) {
+        res.status(404).json({
+          success: false,
+          message: 'Event not found or unauthorized'
+        });
+        return;
+      }
+
+      const payments = await Payment.find({ event: eventId })
+        .populate('user', 'firstName lastName email')
+        .populate('ticket', 'ticketNumber status')
+        .sort({ createdAt: -1 });
+
+      const totalRevenue = payments
+        .filter((p) => p.status === PaymentStatus.SUCCESS)
+        .reduce((sum, p) => sum + p.amount, 0);
+
+      res.status(200).json({
+        success: true,
+        data: {
+          payments,
+          totalRevenue,
+          totalTransactions: payments.length
+        }
+      });
+    } catch (error: any) {
+      Logger.error('Get event payments error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to fetch event payments'
+      });
+    }
+  }
+}

@@ -1,33 +1,19 @@
 export class Logger {
-  static info(message: string, data?: any) {
-    console.log(`\n📡 [INFO] ${new Date().toLocaleTimeString()} - ${message}`);
-    if (data) console.log('   Details:', data);
+  static info(message: string, ...args: any[]): void {
+    console.log(`[INFO] ${new Date().toISOString()} - ${message}`, ...args);
   }
 
-  static success(message: string, data?: any) {
-    console.log(`✅ [SUCCESS] ${new Date().toLocaleTimeString()} - ${message}`);
-    if (data) console.log('   Details:', data);
+  static error(message: string, error?: any): void {
+    console.error(`[ERROR] ${new Date().toISOString()} - ${message}`, error);
   }
 
-  static error(message: string, error?: any) {
-    console.error(`❌ [ERROR] ${new Date().toLocaleTimeString()} - ${message}`);
-    if (error) console.error('   Error:', error);
+  static warn(message: string, ...args: any[]): void {
+    console.warn(`[WARN] ${new Date().toISOString()} - ${message}`, ...args);
   }
 
-  static warn(message: string, data?: any) {
-    console.warn(`⚠️  [WARN] ${new Date().toLocaleTimeString()} - ${message}`);
-    if (data) console.warn('   Details:', data);
-  }
-
-  static request(method: string, path: string, userId?: string) {
-    const user = userId ? ` [User: ${userId}]` : '';
-    console.log(`📨 [${method}] ${path}${user}`);
-  }
-
-  static response(method: string, path: string, status: number, message: string) {
-    const icon = status < 400 ? '📤' : '⚠️ ';
-    console.log(`${icon} [${method}] ${path} → ${status} ${message}`);
+  static debug(message: string, ...args: any[]): void {
+    if (process.env.NODE_ENV === 'development') {
+      console.debug(`[DEBUG] ${new Date().toISOString()} - ${message}`, ...args);
+    }
   }
 }
-
-export default Logger;

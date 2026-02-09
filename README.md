@@ -1,650 +1,471 @@
-# Eventful - Event Ticketing and Management Platform
+# Eventful - Event Ticketing Platform
 
-A modern, comprehensive event ticketing and management platform built with TypeScript, Express.js, MongoDB, Redis, and vanilla JavaScript frontend. Eventful enables event creators to organize events and manage attendees seamlessly.
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue.svg)](https://www.typescriptlang.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
+[![Express](https://img.shields.io/badge/Express-4.18-lightgrey.svg)](https://expressjs.com/)
+[![MongoDB](https://img.shields.io/badge/MongoDB-9.1-green.svg)](https://www.mongodb.com/)
+[![Redis](https://img.shields.io/badge/Redis-4.6-red.svg)](https://redis.io/)
 
-## 🚀 Quick Start
+Eventful is a comprehensive event ticketing and management platform that connects event creators with attendees. From concerts to sports events, Eventful provides a seamless experience for creating, discovering, and attending events.
 
-### Prerequisites
-- **Node.js** 16+ | **npm** 7+ | **MongoDB** 4.4+ | **Redis** 6.0+
+## Features
 
-### Setup (5 minutes)
-```bash
-# 1. Install dependencies
-npm install
+### Core Features
+- ✅ **Authentication & Authorization**: Secure JWT-based authentication with role-based access control (Creators & Eventees)
+- ✅ **Event Management**: Create, update, delete, and publish events with rich details, state/country selection, and smart scheduling
+- ✅ **QR Code Tickets**: Automatic QR code generation for tickets with creator verification system
+- ✅ **Payment Integration**: Paystack payment gateway with demo mode fallback and transaction validation
+- ✅ **Flexible Reminders**: Customizable event reminders (1 hour to 2 weeks before event)
+- ✅ **Ticket Verification**: Creators can verify and scan tickets at events in real-time
+- ✅ **Dark Mode Theme**: Toggle between light and dark themes with localStorage persistence
+- ✅ **Analytics Dashboard**: Comprehensive analytics for event creators with sales metrics
+- ✅ **Social Media Sharing**: Easy event sharing on Facebook, Twitter, LinkedIn, WhatsApp
+- ✅ **Real-time Notifications**: Toast notifications for payments, tickets, and events
+- ✅ **Email Notifications**: Automated emails for tickets, reminders, and payment confirmations
 
-# 2. Configure environment (.env file in project root)
-MONGODB_URI=mongodb+srv://user:pass@cluster.mongodb.net/eventful
-REDIS_URL=redis://localhost:6379
-PAYSTACK_SECRET_KEY=your_paystack_key
-JWT_SECRET=your_jwt_secret
-SMTP_USER=your_email@gmail.com
-SMTP_PASS=your_app_password
+### Technical Features
+- ✅ **TypeScript**: Fully typed codebase for better development experience
+- ✅ **Redis Caching**: Cache layer for improved performance
+- ✅ **Rate Limiting**: Protect API endpoints from abuse
+- ✅ **Unit & Integration Tests**: Comprehensive test coverage
+- ✅ **API Documentation**: Complete REST API documentation
 
-# 3. Build TypeScript
-npm run build
-
-# 4. Start server
-npm run dev
-
-# 5. Open browser
-Navigate to: http://localhost:5000
-```
-
----
-
-## 📋 Features Overview
-
-### 🔐 Authentication & Authorization
-- JWT-based authentication with role-based access control
-- User registration and secure login
-- Support for dual roles: Creators (event organizers) and Eventees (attendees)
-- Password hashing with bcryptjs
-- Email and phone verification
-
-### 🎭 Event Management
-- Create, update, publish, and manage events
-- Event filtering by category, date, and location
-- Support for all event types: concerts, theater, sports, conferences, workshops
-- Draft/published event status tracking
-- Bulk event operations
-
-### 🎫 Ticketing System
-- **Automatic QR code generation** for each ticket using qrcode library
-- Ticket validation and QR scanning capabilities
-- Ticket status tracking: valid, used, cancelled, refunded
-- Bulk ticket generation
-- Ticket download and sharing
-
-### 💳 Payment Processing
-- **Paystack integration** for secure payment handling
-- Multiple payment method support
-- Real-time transaction processing
-- Refund management
-- Payment history and analytics
-
-### 📢 Notifications
-- Multi-channel delivery: Email, SMS, In-app
-- Event reminders and announcements
-- Payment confirmations
-- Scheduled notifications
-- Read status tracking
-
-### 📊 Analytics & Reporting
-- Real-time event performance metrics
-- Ticket sales tracking
-- Revenue reports by event
-- Attendance check-in analytics
-- QR code scanning statistics
-- Daily/weekly/monthly statistics
-
-### 🔗 Social Sharing
-- Share events on Facebook, Twitter, LinkedIn, WhatsApp
-- Generate shareable event links
-- QR code sharing for easy promotion
-- Copy-to-clipboard functionality
-
-### ⚡ Performance Optimization
-- Redis caching layer for frequently accessed data
-- Database query optimization with indexes
-- Reduced API response times
-- Session caching
-
-### 🔒 Security
-- Helmet.js for security headers
-- Rate limiting on API endpoints
-- Input validation and sanitization
-- CORS configuration
-- Secure password handling
-
----
-
-## 🏗️ Project Architecture
-
-### Backend Structure
-```
-src/
-├── config/           Configuration files
-│   ├── database.ts   MongoDB connection & setup
-│   ├── environment.ts Environment variables
-│   └── redis.ts      Redis client setup
-├── controllers/      Route handlers
-│   ├── AuthController.ts         User auth logic
-│   ├── EventController.ts        Event operations
-│   ├── TicketController.ts       Ticket management
-│   ├── PaymentController.ts      Payment processing
-│   └── NotificationController.ts Notification sending
-├── middleware/       Express middleware
-│   └── auth.ts       JWT verification & role checking
-├── models/          Mongoose schemas
-│   ├── User.ts          User model
-│   ├── Event.ts         Event model
-│   ├── Ticket.ts        Ticket model
-│   ├── Payment.ts       Payment model
-│   ├── Notification.ts  Notification model
-│   └── Analytics.ts     Analytics model
-├── services/        Business logic layer
-│   ├── AuthService.ts              User authentication
-│   ├── EventService.ts             Event CRUD
-│   ├── TicketService.ts            Ticket generation
-│   ├── PaymentService.ts           Payment handling
-│   ├── NotificationService.ts      Notification dispatch
-│   └── QRCodeService.ts            QR code generation
-├── routes/          API endpoints
-│   ├── authRoutes.ts               /api/auth/*
-│   ├── eventRoutes.ts              /api/events/*
-│   ├── ticketRoutes.ts             /api/tickets/*
-│   ├── paymentRoutes.ts            /api/payments/*
-│   └── notificationRoutes.ts       /api/notifications/*
-├── utils/           Utility functions
-│   ├── errors.ts      Error handling
-│   └── jwt.ts         JWT operations
-└── index.ts         Express server entry point
-```
-
-### Frontend Structure
-```
-public/
-├── index.html        Single-page application (optimized)
-├── css/
-│   └── styles.css    Responsive dark/light theme styles (optimized)
-├── js/
-│   └── app.js        Core application logic (optimized)
-└── assets/           Static resources
-```
-
----
-
-## 🎨 Frontend - User Interface
-
-### 5 Main Sections
-
-#### 🏠 Home Section
-- Welcome hero banner with call-to-action buttons
-- 6 feature cards highlighting platform capabilities
-- Responsive grid layout
-- Direct navigation to events or signup
-
-#### 🎭 Events Section
-- **Browse 3 demo events**:
-  - Summer Music Festival ($45, June 15, 2026)
-  - Tech Conference 2026 ($199, June 22, 2026)
-  - Championship Football Match ($75, July 5, 2026)
-- Real-time search filtering
-- Category and date filtering
-- Each event displays: title, date, location, price, availability
-- "Buy Ticket" and "Share" buttons for each event
-
-#### 🎫 My Tickets Section
-- Display purchased tickets in card format
-- Each ticket shows:
-  - Event name and ticket number
-  - Status indicator (Valid/Expired)
-  - Event date and location
-  - Purchase date
-  - QR code placeholder
-  - Download and Share options
-
-#### 💳 Payments Section
-- Transaction history table with sorting
-- Columns: Transaction ID, Event, Amount, Date, Status, Actions
-- Summary statistics:
-  - Total Spent: $319.00
-  - Total Transactions: 3
-  - Average per transaction: $106.33
-- Payment status badges (Completed/Pending/Failed)
-
-#### 📊 Analytics Section
-- 3 event analytics cards showing:
-  - Tickets sold per event
-  - Revenue generated
-  - Attendee check-ins
-  - QR scans
-  - Chart placeholders for visualization
-- Summary section with platform-wide metrics:
-  - Total events: 3
-  - Combined revenue: $207,555
-  - Total attendees: 2,253
-  - Conversion rate: 94.2%
-
-### 🎨 Theme System
-
-#### Light Mode (Default)
-- White backgrounds (#ffffff)
-- Dark text (#1a1a1a)
-- Purple accent (#7c3aed)
-
-#### Dark Mode
-- Dark backgrounds (#1a1a1a)
-- Light text (#f5f5f5)
-- Purple accent (adjusted for contrast)
-
-#### How to Toggle
-1. Click moon icon (🌙) in top-right navbar
-2. Switch to sun icon (☀️) to toggle
-3. Preference saved automatically in browser
-4. Persists across sessions
-
-### 📱 Modals
-
-#### 🔑 Auth Modal
-- Email and password inputs
-- Name field (sign-up only)
-- Toggle between Sign In and Sign Up modes
-- Form validation and error handling
-
-#### ✏️ Event Creation Modal
-- Event title, category, description
-- Date and time picker
-- Location input
-- Capacity setting
-- Ticket price configuration
-- Submit to create event
-
-#### 💰 Payment Modal
-- Event summary display
-- Quantity selector with live calculation
-- Email confirmation
-- "Proceed to Paystack" button for payment processing
-
-#### 🔗 Share Modal
-- Social media sharing buttons (Facebook, Twitter, LinkedIn, WhatsApp)
-- Shareable link display
-- Copy-to-clipboard functionality
-- QR code option
-
-### 📲 Notifications Panel
-- Sidebar notification list
-- Icons indicating notification type
-- Timestamps (relative: "2h ago", "3h ago", etc.)
-- Close button for dismissal
-
----
-
-## 🔌 API Endpoints
-
-### Authentication
-```
-POST   /api/auth/register      Create new user account
-POST   /api/auth/login         User login
-POST   /api/auth/logout        User logout
-GET    /api/auth/profile       Get current user profile
-PUT    /api/auth/profile       Update user profile
-```
-
-### Events
-```
-GET    /api/events             List all events with filters
-GET    /api/events/:id         Get event details
-POST   /api/events             Create new event
-PUT    /api/events/:id         Update event
-DELETE /api/events/:id         Delete event
-GET    /api/events/:id/analytics  Get event analytics
-```
-
-### Tickets
-```
-GET    /api/tickets            User's purchased tickets
-POST   /api/tickets            Generate/purchase ticket
-GET    /api/tickets/:id        Get ticket details
-GET    /api/tickets/:id/qr     Generate QR code
-PUT    /api/tickets/:id        Update ticket status
-```
-
-### Payments
-```
-GET    /api/payments           Payment history
-POST   /api/payments/initialize Initialize Paystack payment
-POST   /api/payments/verify    Verify payment completion
-GET    /api/payments/:id       Get payment details
-```
-
-### Notifications
-```
-GET    /api/notifications      Get user notifications
-POST   /api/notifications      Send notification
-PUT    /api/notifications/:id  Mark as read
-DELETE /api/notifications/:id  Delete notification
-```
-
----
-
-## 📦 Tech Stack
+## Tech Stack
 
 ### Backend
-- **Runtime**: Node.js 16+
-- **Language**: TypeScript 4+
-- **Framework**: Express.js 4.x
-- **Database**: MongoDB with Mongoose ODM
-- **Cache**: Redis
-- **Authentication**: JWT (jsonwebtoken)
-- **Password Security**: bcryptjs
-- **QR Codes**: qrcode library
-- **Payments**: Paystack API
-- **Email**: Nodemailer
-- **Security**: Helmet, Express Rate Limit
-- **Testing**: Jest, Supertest
+- **Node.js** - Runtime environment
+- **Express.js** - Web framework
+- **TypeScript** - Type-safe development
+- **MongoDB** - Database
+- **Mongoose** - ODM
+- **Redis** - Caching layer
+- **Frontend
+- **React 18** - UI framework with hooks
+- **TypeScript** - Type-safe development
+- **Vite** - Fast build tool
+- **Tailwind CSS** - Utility-first CSS with dark mode support
+- **React Query** - Server state management
+- **React Hook Form** - Form state management
+- **date-fns** - Date formatting and manipulation
+- **Axios** - HTTP client
+- **React Router** - Client-side routing
+- **React Toastify** - Toast notifications
+### Testing & Quality
+- **Jest** - Testing framework
+- **ESLint** - Code linting
+- **Prettier** - Code formatting
 
-### Frontend
-- **HTML5**: Semantic markup
-- **CSS3**: CSS variables for theming, flexbox, grid, animations
-- **JavaScript**: Vanilla ES6+ (no frameworks)
-- **Icons**: Unicode emoji for lightweight UI
+## Prerequisites
 
-### Build & Tools
-- **Compiler**: TypeScript Compiler (tsc)
-- **Package Manager**: npm
-- **Development**: npm scripts
+- Node.js 18+ 
+- MongoDB 5+
+- Redis 6+
+- Paystack account (for payments)
+- Email service (Gmail, SendGrid, etc.)
 
----
+## Installation
 
-## 🔧 Environment Configuration
-
-### Create `.env` file in project root
-
-#### Database
-```env
-MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/eventful
-```
-
-Get MongoDB Atlas URI:
-1. Go to https://www.mongodb.com/cloud/atlas
-2. Create account and cluster
-3. Get connection string from "Connect" button
-
-#### Redis (Optional but recommended)
-```env
-REDIS_URL=redis://localhost:6379
-# Or cloud Redis: redis://:password@host:port
-```
-
-#### Paystack Payment
-```env
-PAYSTACK_SECRET_KEY=sk_test_xxxxx...  # From Paystack dashboard
-PAYSTACK_PUBLIC_KEY=pk_test_xxxxx...
-```
-
-#### JWT & Security
-```env
-JWT_SECRET=your_super_secret_jwt_key_change_in_production
-JWT_EXPIRY=7d
-```
-
-#### Email (Nodemailer)
-```env
-SMTP_USER=your-email@gmail.com
-SMTP_PASS=your-app-specific-password
-SMTP_FROM="Eventful Notifications <noreply@eventful.app>"
-```
-
-#### Server
-```env
-PORT=5000
-NODE_ENV=development
-LOG_LEVEL=debug
-```
-
----
-
-## 🎯 Running the Application
-
-### Development
+1. **Clone the repository**
 ```bash
-# Install dependencies
+git clone <repository-url>
+cd eventful
+```
+
+2. **Install dependencies**
+```bash
 npm install
-
-# Build TypeScript
-npm run build
-
-# Start dev server with auto-reload
-npm run dev
-
-# Run tests
-npm test
-
-# Run specific test file
-npm test -- jwt.test.ts
 ```
 
-### Production
+3. **Environment Setup**
+Create a `.env` file in the root directory:
 ```bash
-# Build
-npm run build
-
-# Set NODE_ENV
-export NODE_ENV=production
-
-# Start
-npm start
+cp .env.example .env
 ```
 
-### Testing
+Update the `.env` file with your configuration:
+```env
+NODE_ENV=development
+PORT=5000
+
+# MongoDB
+MONGODB_URI=mongodb://localhost:27017/eventful
+
+# Redis
+REDIS_URL=redis://localhost:6379
+
+# JWT
+JWT_SECRET=your-super-secret-jwt-key
+JWT_EXPIRES_IN=7d
+
+# Paystack
+PAYSTACK_SECRET_KEY=your-paystack-secret-key
+
+# Email
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USER=your-email@gmail.com
+EMAIL_PASSWORD=your-email-password
+
+# Frontend
+FRONTEND_URL=http://localhost:3000
+```
+
+4. **Start MongoDB**
+```bash
+# Using Docker
+docker run -d -p 27017:27017 --name mongodb mongo:latest
+
+# Or use local MongoDB installation
+mongod
+```
+
+5. **Start Redis**
+```bash
+# Using Docker
+docker run -d -p 6379:6379 --name redis redis:latest
+
+# Or use local Redis installation
+redis-server
+```
+
+## Running the Application
+
+### Backend Development Mode
+```bash
+npm run dev
+```
+Backend runs on `http://localhost:5000`
+
+### Frontend Development Mode
+```bash
+cd frontend
+npm run dev
+```
+Frontend runs on `http://localhost:3000`
+
+### Production Build
+```bash
+# Build backend
+npm run build
+npm start
+
+# Build frontend
+cd frontend
+npm run build
+npm run preview
+```
+
+### Running Tests
 ```bash
 # Run all tests
 npm test
 
-# Run with coverage
+# Run tests in watch mode
+npm run test:watch
+
+# Run tests with coverage
 npm test -- --coverage
-
-# Watch mode
-npm test -- --watch
-
-# Integration tests only
-npm test -- integration/
-
-# Unit tests only
-npm test -- unit/
 ```
 
----
-
-## 📊 Database Models
-
-### User
-```javascript
-{
-  _id: ObjectId,
-  name: String,
-  email: String (unique),
-  password: String (hashed),
-  phone: String,
-  role: "creator" | "eventee",
-  isVerified: Boolean,
-  createdAt: Date,
-  updatedAt: Date
-}
-```
-
-### Event
-```javascript
-{
-  _id: ObjectId,
-  title: String,
-  description: String,
-  category: String,
-  creator: ObjectId (User ref),
-  date: Date,
-  location: String,
-  capacity: Number,
-  ticketPrice: Number,
-  totalTickets: Number,
-  availableTickets: Number,
-  image: String (URL),
-  status: "draft" | "published" | "cancelled",
-  createdAt: Date,
-  updatedAt: Date
-}
-```
-
-### Ticket
-```javascript
-{
-  _id: ObjectId,
-  event: ObjectId (Event ref),
-  buyer: ObjectId (User ref),
-  ticketNumber: String (unique),
-  qrCode: String,
-  status: "valid" | "used" | "cancelled" | "refunded",
-  purchaseDate: Date,
-  usedDate: Date,
-  amount: Number,
-  createdAt: Date
-}
-```
-
-### Payment
-```javascript
-{
-  _id: ObjectId,
-  user: ObjectId (User ref),
-  ticket: ObjectId (Ticket ref),
-  event: ObjectId (Event ref),
-  amount: Number,
-  currency: String,
-  status: "pending" | "completed" | "failed" | "refunded",
-  reference: String (Paystack ref),
-  metadata: Object,
-  createdAt: Date,
-  completedAt: Date
-}
-```
-
-### Notification
-```javascript
-{
-  _id: ObjectId,
-  recipient: ObjectId (User ref),
-  type: String,
-  title: String,
-  message: String,
-  channel: ["email", "sms", "in-app"],
-  isRead: Boolean,
-  sentAt: Date,
-  readAt: Date
-}
-```
-
----
-
-## 🔐 Security Checklist
-
-- ✅ JWT tokens for stateless authentication
-- ✅ Password hashing with bcryptjs (salt: 10)
-- ✅ Rate limiting on endpoints
-- ✅ CORS configured for allowed origins
-- ✅ Input validation and sanitization
-- ✅ Environment variables for secrets
-- ✅ Helmet.js security headers
-- ✅ HTTPS enforced in production
-- ✅ Database query parameterization
-- ✅ Error messages don't leak sensitive info
-
----
-
-## 📈 Performance Optimization
-
-### Caching Strategy
-- Redis caches frequent event queries
-- User session caching
-- Notification deduplication
-- Payment verification caching
-
-### Database Optimization
-- Indexed fields: email, eventId, userId, ticketNumber
-- Connection pooling
-- Query optimization
-- Pagination for large datasets
-
-### Frontend Optimization
-- Minified CSS and JavaScript
-- Consolidated HTML structure
-- Smooth CSS transitions
-- Lazy loading for images
-- Event delegation for listeners
-
----
-
-## 🐛 Troubleshooting
-
-### Port Already in Use
+### Linting & Formatting
 ```bash
-# Windows
-netstat -ano | findstr :5000
-taskkill /PID <PID> /F
+# Lint code
+npm run lint
 
-# Mac/Linux
-lsof -i :5000
-kill -9 <PID>
+# Format code
+npm run format
 ```
 
-### MongoDB Connection Error
-- Verify MongoDB URI in `.env`
-- Check network access in MongoDB Atlas
-- Ensure MongoDB service is running
+## API Documentation
 
-### Redis Connection Error
-- Verify Redis is running: `redis-cli ping`
-- Check Redis URI in `.env`
-- Use Redis cloud if local isn't available
+Full API documentation is available in [API_DOCUMENTATION.md](./API_DOCUMENTATION.md)
 
-### Payment Not Processing
-- Verify Paystack API keys are correct
-- Ensure amount is in correct currency
-- Check Paystack logs at dashboard.paystack.com
+### Quick Start
+
+1. **Register a User**
+```bash
+curl -X POST http://localhost:5000/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "creator@example.com",
+    "password": "password123",
+    "firstName": "John",
+    "lastName": "Doe",
+    "role": "creator"
+  }'
+```
+
+2. **Create an Event**
+```bash
+curl -X POST http://localhost:5000/api/events \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Amazing Concert",
+    "description": "A night of great music",
+    "category": "concert",
+    "venue": "National Stadium",
+    "location": {
+      "address": "123 Main St",
+      "city": "Lagos",
+      "state": "Lagos",
+      "country": "Nigeria"
+    },
+    "startDate": "2024-12-31T20:00:00Z",
+    "endDate": "2024-12-31T23:59:00Z",
+    "ticketPrice": 5000,
+    "totalTickets": 1000,
+    "status": "published"
+  }'
+```
+
+3. **Purchase a Ticket**
+```bash
+# Initialize payment
+curl -X POST http://localhost:5000/api/payments/initialize \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "eventId": "EVENT_ID",
+    "reminder": "1_day"
+  }'
+
+# After payment, verify
+curl -X POST http://localhost:5000/api/payments/verify \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "reference": "PAYMENT_REFERENCE"
+  }'
+```
+
+## Project Structure
+
+```
+eventful/
+├── src/
+│   ├── config/           # Configuration files (DB, Redis, Passport)
+│   ├── controllers/      # Route controllers
+│   ├── middleware/       # Custom middleware
+│   ├── models/          # Mongoose models
+│   ├── routes/          # API routes
+│   ├── services/        # Business logic services
+│   ├── tests/           # Test files
+│   ├── types/           # TypeScript type definitions
+│   ├── utils/           # Utility functions
+│   └── index.ts         # Application entry point
+├── dist/                # Compiled JavaScript
+├── coverage/            # Test coverage reports
+├── .env                 # Environment variables
+├── .env.example         # Environment template
+├── .gitignore          # Git ignore rules
+├── jest.config.js      # Jest configuration
+├── package.json        # Dependencies and scripts
+├── tsconfig.json       # TypeScript configuration
+└── README.md           # This file
+```
+
+## Key Features Explained
+
+### 1. Authentication & Authorization
+- JWT-based authentication with secure token management
+- Two user roles: **Creator** (event organizers) and **Eventee** (attendees)
+- Protected routes with role-based access control (RBAC)
+- Email verification and password reset
+
+### 2. Event Management with Smart Features
+- Creators can create, update, and delete events
+- **State & Country Selection**: Pre-populated dropdowns for Nigerian states and international countries
+- **Date/Time Validation**: Warning system if event times are set to midnight
+- Rich event details including location, images, tags, and pricing
+- Event status management (draft, published, cancelled, completed)
+- Sample events auto-seeded on first startup
+
+### 3. Dark Mode Theme System
+- Toggle between light and dark modes
+- **localStorage persistence** - theme preference saved across sessions
+- System preference detection
+- Comprehensive dark mode styling across all pages
+- Smooth transitions between themes
+
+### 4. Event Ticketing & QR Codes
+- Automatic QR code generation upon ticket purchase
+- QR codes contain encrypted ticket information with metadata
+- Unique ticket numbering system (TKT-XXX-YYYY format)
+- Flexible reminder settings per ticket
+
+### 5. Payment Integration with Fallback
+- **Paystack payment gateway** for secure transactions
+- **Demo mode** when Paystack credentials not configured
+- Enhanced error handling and user feedback
+- Payment verification with automatic ticket issuance
+- Transaction validation and duplicate payment prevention
+- Real-time payment status updates
+
+### 6. Ticket Verification System (Creator Dashboard)
+- **Verify Tickets Page** for creators to scan/enter ticket numbers
+- QR code scanning support
+- Real-time ticket validation
+- Mark tickets as used during event
+- View verified ticket details (attendee info, status)
+- Event selector and tickets summary sidebar
+
+### 7. Streamlined Purchase Flow
+- **Payment Success Notifications** on dashboard
+- Auto-redirect to dashboard after successful payment
+- Automatic cache invalidation for ticket visibility
+- Green success banner confirmation message
+- Invoice and receipt emails
+
+### 8. Notification System
+- Toast notifications for all user actions
+- Flexible reminder periods (1 hour to 2 weeks)
+- Automated email notifications for:
+  - Welcome emails on registration
+  - Ticket purchase confirmation
+  - Event reminders
+  - Payment confirmations
+- Scheduled background job processing
+
+### 9. Analytics & Insights
+- Overall platform analytics for creators
+- Event-specific performance metrics
+- Ticket sales tracking and revenue reports
+- Attendance rate calculations
+
+### 10. Security & Performance
+- **Rate Limiting**: Endpoint-specific limits for auth, payments, and general APIs
+- **Redis Caching**: Reduced database queries for better performance
+- **Input Validation**: Comprehensive server-side validation
+- **Error Handling**: Graceful error messages and logging
+- **MongoDB Index Optimization**: Sparse indexes to prevent duplicate key errors
+- **TTL Indexes**: Auto-expire pending payments after 24 hours
+
+## Testing
+
+The project includes comprehensive tests:
+
+```bash
+# Run all tests
+npm test
+
+# Run specific test file
+npm test -- helpers.test.ts
+
+# Run tests with coverage
+npm test -- --coverage
+```
+
+Test coverage includes:
+- Unit tests for utilities and services
+- Model validation tests
+- Integration tests for API endpoints
+
+## Documentation
+
+Essential documentation for the project:
+
+- **[API_DOCUMENTATION.md](./API_DOCUMENTATION.md)** - Complete API reference with all endpoints and examples
+- **[DEPLOYMENT_RENDER.md](./DEPLOYMENT_RENDER.md)** - Step-by-step production deployment guide on Render
+- **[SECURITY.md](./SECURITY.md)** - Security best practices and guidelines
+- **[CHANGELOG.md](./CHANGELOG.md)** - Version history and recent changes
+- **[.env.example](./.env.example)** - Backend environment configuration template
+- **[frontend/.env.example](./frontend/.env.example)** - Frontend environment configuration template
+
+## Setup Instructions
+
+### Prerequisites
+- Node.js 18+
+- MongoDB (local or MongoDB Atlas)
+- Redis (local or managed Redis)
+- Git
+
+### Quick Setup
+
+1. **Clone repository**
+```bash
+git clone <repository-url>
+cd eventful
+```
+
+2. **Backend setup**
+```bash
+npm install
+cp .env.example .env
+# Update .env with your configuration
+npm run dev
+```
+
+3. **Frontend setup**
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+The backend runs on http://localhost:5000 and frontend on http://localhost:3000
+
+For detailed deployment instructions, see [DEPLOYMENT_RENDER.md](./DEPLOYMENT_RENDER.md).
+
+## Contributing
+
+Contributions are welcome! Please:
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes with clear messages
+4. Push to the branch
+5. Open a Pull Request
+
+For details on code style and development guidelines, refer to the relevant sections in this README and the source code.
+
+## Security
+
+For production deployments, ensure you:
+- Use strong, unique `JWT_SECRET` (32+ characters)
+- Never commit `.env` files to version control
+- Use HTTPS in production
+- Keep dependencies updated
+- Follow guidelines in [SECURITY.md](./SECURITY.md)
+
+## License
+
+This project is licensed under the ISC License.
+
+## Support
+
+For issues and questions:
+- Check [API_DOCUMENTATION.md](./API_DOCUMENTATION.md) for API help
+- Review [DEPLOYMENT_RENDER.md](./DEPLOYMENT_RENDER.md) for deployment issues
+- See [SECURITY.md](./SECURITY.md) for security concerns
+- Open a GitHub issue for bugs or feature requests
+
+## Deployment
+
+This project is production-ready and can be deployed on:
+- **Render** (recommended) - See [DEPLOYMENT_RENDER.md](./DEPLOYMENT_RENDER.md)
+- Heroku, Railway, or other Node.js platforms
+
+Estimated deployment time: **15-20 minutes**
 
 ---
 
-## 📝 Code Quality
+- [ ] Payment webhook handling
+- [ ] Multi-currency support
+- [ ] Event categories management
+- [ ] Advanced search and filtering
+- [ ] Mobile applications (iOS & Android)
+- [ ] Social authentication (Google, Facebook)
+- [ ] Ticket transfers
+- [ ] Refund management
+- [ ] Event reviews and ratings
 
-### TypeScript
-- Strict type checking enabled
-- No `any` types without justification
-- Proper error typing
+## Acknowledgments
 
-### JavaScript
-- ES6+ syntax
-- Clean variable naming
-- Responsive design principles
-
-### CSS
-- CSS variables for theming
-- Mobile-first approach
-- BEM-like class naming
-
----
-
-## 📄 License & Attribution
-
-This project uses:
-- **Express.js** - Web framework
-- **MongoDB/Mongoose** - Database
-- **Redis** - Caching
-- **Paystack** - Payment processing
-- **JWT** - Authentication
-- **QR Code** - Ticket generation
-- **Nodemailer** - Email service
+- Paystack for payment processing
+- Redis for caching capabilities
+- MongoDB for flexible data storage
+- The Node.js and TypeScript communities
 
 ---
 
-## 👥 Support
-
-For issues or questions:
-1. Check this documentation
-2. Review API_DOCUMENTATION.md for endpoint details
-3. Check test files for usage examples
-4. Review TypeScript types for API contracts
-
----
-
-## ✨ Key Highlights
-
-- **Optimized Codebase**: Reduced verbosity across HTML (~47%), CSS (~38%), and JavaScript (~60%)
-- **Modern Stack**: TypeScript + Express for type safety
-- **Scalable Architecture**: Service-controller separation
-- **Production Ready**: Security, caching, error handling
-- **Responsive UI**: Dark/light theme toggle
-- **Complete Feature Set**: Full event lifecycle management
-
----
-
-**Last Updated**: January 2024
-**Status**: Production Ready
+Built with ❤️ for Altschool Assessment
