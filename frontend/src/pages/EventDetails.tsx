@@ -50,7 +50,7 @@ const EventDetails: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900">
+    <div className="min-h-screen bg-cream-light dark:bg-gray-900">
       <Navbar />
       <div className="max-w-4xl mx-auto px-4 py-8">
         {event.images?.length > 0 && (
@@ -116,7 +116,7 @@ const EventDetails: React.FC = () => {
         )}
 
         {event.status === 'published' && event.availableTickets > 0 && (
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+          <div className="bg-gray-50 dark:bg-gray-800 p-6 rounded-lg shadow-md">
             <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Purchase Ticket</h3>
             
             <div className="mb-4">

@@ -20,7 +20,7 @@ const Dashboard: React.FC = () => {
   }, [searchParams]);
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900">
+    <div className="min-h-screen bg-cream-light dark:bg-gray-900">
       <Navbar />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">
@@ -40,7 +40,7 @@ const Dashboard: React.FC = () => {
             <>
               <Link
                 to="/events/create"
-                className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow"
+                className="bg-gray-50 dark:bg-gray-800 p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow"
               >
                 <div className="text-4xl mb-4">➕</div>
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
@@ -51,7 +51,7 @@ const Dashboard: React.FC = () => {
 
               <Link
                 to="/my-events"
-                className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow"
+                className="bg-gray-50 dark:bg-gray-800 p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow"
               >
                 <div className="text-4xl mb-4">📋</div>
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">My Events</h2>
@@ -60,7 +60,7 @@ const Dashboard: React.FC = () => {
 
               <Link
                 to="/verify-tickets"
-                className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow"
+                className="bg-gray-50 dark:bg-gray-800 p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow"
               >
                 <div className="text-4xl mb-4">✅</div>
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Verify Tickets</h2>
@@ -71,7 +71,7 @@ const Dashboard: React.FC = () => {
             <>
               <Link
                 to="/events"
-                className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow"
+                className="bg-gray-50 dark:bg-gray-800 p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow"
               >
                 <div className="text-4xl mb-4">🎉</div>
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
@@ -82,7 +82,7 @@ const Dashboard: React.FC = () => {
 
               <Link
                 to="/my-tickets"
-                className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow"
+                className="bg-gray-50 dark:bg-gray-800 p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow"
               >
                 <div className="text-4xl mb-4">🎫</div>
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">My Tickets</h2>

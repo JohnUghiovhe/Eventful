@@ -10,7 +10,7 @@ interface EventCardProps {
 const EventCard: React.FC<EventCardProps> = ({ event }) => {
   return (
     <Link to={`/events/${event._id}`} className="block">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow">
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow">
         {event.images?.length > 0 && (
           <img
             src={event.images[0]}
@@ -50,7 +50,7 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
               {event.tags.slice(0, 3).map((tag, index) => (
                 <span
                   key={index}
-                  className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-1 rounded"
+                  className="text-xs bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-1 rounded"
                 >
                   #{tag}
                 </span>

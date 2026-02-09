@@ -75,7 +75,7 @@ const MyEvents: React.FC = () => {
         ) : (
           <div className="space-y-4">
             {events.map((event: any) => (
-              <div key={event._id} className="bg-white p-6 rounded-lg shadow-md">
+              <div key={event._id} className="bg-gray-50 dark:bg-gray-800 p-6 rounded-lg shadow-md">
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
                     <h3 className="text-xl font-bold mb-2">{event.title}</h3>

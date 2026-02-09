@@ -24,7 +24,7 @@ const Home: React.FC = () => {
                   <div className="rounded-md shadow">
                     <Link
                       to="/events"
-                      className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-indigo-600 bg-white hover:bg-gray-50 md:py-4 md:text-lg md:px-10"
+                      className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 md:py-4 md:text-lg md:px-10"
                     >
                       Explore Events
                     </Link>
@@ -45,7 +45,7 @@ const Home: React.FC = () => {
       </div>
 
       {/* Features Section */}
-      <div className="py-12 bg-white">
+      <div className="py-12 bg-gray-50 dark:bg-gray-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="lg:text-center">
             <h2 className="text-base text-indigo-600 font-semibold tracking-wide uppercase">
