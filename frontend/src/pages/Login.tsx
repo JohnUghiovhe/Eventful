@@ -25,15 +25,26 @@ const Login: React.FC = () => {
   const onSubmit = async (data: LoginFormData) => {
     try {
       setLoading(true);
+      console.log('Attempting login with:', { email: data.email });
+      
       const response = await authService.login(data);
+      console.log('Login response:', response);
 
       if (response.success && response.data) {
+        console.log('Login successful, redirecting...');
         login(response.data.token, response.data.user);
         toast.success('Login successful!');
         navigate('/dashboard');
+      } else {
+        const message = response.message || 'Login failed';
+        console.error('Login failed:', message);
+        toast.error(message);
       }
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Login failed');
+      console.error('Login error:', error);
+      const errorMessage = error.response?.data?.message || error.message || 'Login failed';
+      console.error('Error details:', { status: error.response?.status, data: error.response?.data });
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -42,7 +53,7 @@ const Login: React.FC = () => {
   return (
     <div>
       <Navbar />
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen flex items-center justify-center bg-cream-light dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-8">
           <div>
             <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">

@@ -54,7 +54,7 @@ const PaymentVerify: React.FC = () => {
   }, [reference, demo]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen flex items-center justify-center bg-cream-light dark:bg-gray-900">
       <div className="text-center">
         <LoadingSpinner />
         <h2 className="mt-4 text-xl font-semibold text-gray-900 dark:text-white">Verifying Payment...</h2>

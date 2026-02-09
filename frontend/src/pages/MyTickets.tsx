@@ -15,7 +15,7 @@ const MyTickets: React.FC = () => {
   if (isLoading) return <LoadingSpinner />;
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900">
+    <div className="min-h-screen bg-cream-light dark:bg-gray-900">
       <Navbar />
       <div className="max-w-6xl mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold mb-6 text-gray-900 dark:text-white">My Tickets</h1>
@@ -35,7 +35,7 @@ const MyTickets: React.FC = () => {
                 <Link
                   key={ticket._id}
                   to={`/tickets/${ticket._id}`}
-                  className="block bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow"
+                  className="block bg-gray-50 dark:bg-gray-800 rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow"
                 >
                   {event.images?.length > 0 && (
                     <img

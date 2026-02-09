@@ -32,28 +32,28 @@ const Analytics: React.FC = () => {
 
         {overallData && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <div className="bg-white p-6 rounded-lg shadow-md">
+            <div className="bg-gray-50 dark:bg-gray-800 p-6 rounded-lg shadow-md">
               <h3 className="text-sm font-semibold text-gray-500 mb-2">
                 Total Events
               </h3>
               <p className="text-3xl font-bold">{overallData.totalEvents}</p>
             </div>
 
-            <div className="bg-white p-6 rounded-lg shadow-md">
+            <div className="bg-gray-50 dark:bg-gray-800 p-6 rounded-lg shadow-md">
               <h3 className="text-sm font-semibold text-gray-500 mb-2">
                 Total Tickets Sold
               </h3>
               <p className="text-3xl font-bold">{overallData.totalTicketsSold}</p>
             </div>
 
-            <div className="bg-white p-6 rounded-lg shadow-md">
+            <div className="bg-gray-50 dark:bg-gray-800 p-6 rounded-lg shadow-md">
               <h3 className="text-sm font-semibold text-gray-500 mb-2">
                 Tickets Scanned
               </h3>
               <p className="text-3xl font-bold">{overallData.ticketsScanned}</p>
             </div>
 
-            <div className="bg-white p-6 rounded-lg shadow-md">
+            <div className="bg-gray-50 dark:bg-gray-800 p-6 rounded-lg shadow-md">
               <h3 className="text-sm font-semibold text-gray-500 mb-2">
                 Total Revenue
               </h3>
@@ -64,7 +64,7 @@ const Analytics: React.FC = () => {
           </div>
         )}
 
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-gray-50 dark:bg-gray-800 rounded-lg shadow-md p-6">
           <h2 className="text-xl font-bold mb-4">Event Performance</h2>
 
           {!eventsData || eventsData.length === 0 ? (
@@ -83,7 +83,7 @@ const Analytics: React.FC = () => {
                 </thead>
                 <tbody>
                   {eventsData.map((event: any) => (
-                    <tr key={event.eventId} className="border-b hover:bg-gray-50">
+                    <tr key={event.eventId} className="border-b hover:bg-gray-100 dark:hover:bg-gray-700">
                       <td className="py-3 px-4">{event.eventTitle}</td>
                       <td className="py-3 px-4">
                         {format(new Date(event.eventDate), 'PP')}

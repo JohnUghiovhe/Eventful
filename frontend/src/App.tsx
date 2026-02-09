@@ -40,7 +40,7 @@ const App: React.FC = () => {
         <ThemeProvider>
           <AuthProvider>
             <InactivityWrapper>
-              <div className="min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors">
+              <div className="min-h-screen bg-cream-light dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors">
                 <Routes>
                   {/* Public Routes */}
                   <Route path="/" element={<Home />} />
