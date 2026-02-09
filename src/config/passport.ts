@@ -2,6 +2,7 @@ import passport from 'passport';
 import { Strategy as LocalStrategy } from 'passport-local';
 import { Strategy as JwtStrategy, ExtractJwt, StrategyOptions } from 'passport-jwt';
 import User from '../models/User';
+import { Logger } from '../utils/logger';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -17,18 +18,31 @@ passport.use(
     },
     async (email: string, password: string, done: any) => {
       try {
+        Logger.info('LocalStrategy authenticating:', { email });
+        
         const user = await User.findOne({ email });
         if (!user) {
+          Logger.warn('User not found:', { email });
           return done(null, false, { message: 'Invalid credentials' });
         }
 
         const isMatch = await user.comparePassword(password);
         if (!isMatch) {
+          Logger.warn('Password mismatch:', { email });
           return done(null, false, { message: 'Invalid credentials' });
         }
 
-        return done(null, { id: user._id, email: user.email, role: user.role });
+        Logger.info('LocalStrategy authentication successful:', { email });
+        return done(null, { 
+          id: user._id, 
+          email: user.email, 
+          role: user.role,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          _id: user._id
+        });
       } catch (error) {
+        Logger.error('LocalStrategy error:', error);
         return done(error);
       }
     }

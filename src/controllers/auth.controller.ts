@@ -73,8 +73,10 @@ export class AuthController {
    * Login user
    */
   static async login(req: Request, res: Response): Promise<void> {
+    Logger.info('Login attempt:', { email: req.body.email });
+    
     return new Promise<void>((resolve) => {
-      passport.authenticate('local', { session: false }, (err: any, user: any, info: any) => {
+      passport.authenticate('local', { session: false }, async (err: any, user: any, info: any) => {
         if (err) {
           Logger.error('Login error:', err);
           res.status(500).json({
@@ -85,6 +87,7 @@ export class AuthController {
         }
 
         if (!user) {
+          Logger.warn('Login failed - invalid credentials:', { email: req.body.email });
           res.status(401).json({
             success: false,
             message: info?.message || 'Invalid credentials'
@@ -92,20 +95,40 @@ export class AuthController {
           return resolve();
         }
 
-        // Generate JWT token
-        const token = jwt.sign(
-          { id: user.id, email: user.email, role: user.role },
-          JWT_SECRET as jwt.Secret
-        );
-
-        res.status(200).json({
-          success: true,
-          message: 'Login successful',
-          data: {
-            user,
-            token
+        // Fetch full user document from database
+        try {
+          const fullUser = await User.findById(user.id);
+          if (!fullUser) {
+            Logger.error('User document not found after authentication');
+            res.status(500).json({
+              success: false,
+              message: 'Login failed'
+            });
+            return resolve();
           }
-        });
+
+          // Generate JWT token
+          const token = jwt.sign(
+            { id: fullUser._id.toString(), email: fullUser.email, role: fullUser.role },
+            JWT_SECRET as jwt.Secret
+          );
+
+          Logger.info('Login successful:', { email: fullUser.email, id: fullUser._id });
+          res.status(200).json({
+            success: true,
+            message: 'Login successful',
+            data: {
+              user: sanitizeUser(fullUser),
+              token
+            }
+          });
+        } catch (error) {
+          Logger.error('Error fetching user after authentication:', error);
+          res.status(500).json({
+            success: false,
+            message: 'Login failed'
+          });
+        }
         resolve();
       })(req, res);
     });
