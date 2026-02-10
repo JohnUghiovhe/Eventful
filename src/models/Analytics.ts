@@ -1,4 +1,4 @@
-import { Schema, Document, Model, model, Types } from 'mongoose';
+import { Schema, Document, model, Types } from 'mongoose';
 
 export interface IAnalytics extends Document {
   eventId: Types.ObjectId;
@@ -123,7 +123,6 @@ const analyticsSchema = new Schema<IAnalytics>(
 // Indexes (eventId already has unique: true)\nanalyticsSchema.index({ creatorId: 1 });
 analyticsSchema.index({ lastUpdated: 1 });
 
-export const Analytics: Model<IAnalytics> = model<IAnalytics>(
-  'Analytics',
-  analyticsSchema
-);
+const Analytics = model<IAnalytics>('Analytics', analyticsSchema);
+
+export default Analytics;

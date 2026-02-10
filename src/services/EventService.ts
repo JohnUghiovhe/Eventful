@@ -55,7 +55,7 @@ export class EventService {
 
   static async createEvent(creatorId: string, data: CreateEventRequest): Promise<IEvent | null> {
     try {
-      const event = await Event.create({ ...data, creator: creatorId, ticketsAvailable: data.capacity });
+      const event = await Event.create({ ...data, creator: creatorId, totalTickets: data.capacity, availableTickets: data.capacity });
       await Analytics.create({ eventId: event._id, creatorId });
       await this.invalidateCache(`creator:${creatorId}:events`);
       return event;

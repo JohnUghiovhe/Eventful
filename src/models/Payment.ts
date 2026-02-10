@@ -38,6 +38,9 @@ const paymentSchema = new Schema<IPayment>(
       type: String,
       required: true
     },
+    paystackAuthorizationUrl: {
+      type: String
+    },
     paystackResponse: {
       type: Schema.Types.Mixed,
       default: null
@@ -45,6 +48,9 @@ const paymentSchema = new Schema<IPayment>(
     metadata: {
       type: Schema.Types.Mixed,
       default: null
+    },
+    refundedAt: {
+      type: Date
     }
   },
   {
@@ -73,3 +79,4 @@ paymentSchema.index(
 const Payment = mongoose.model<IPayment>('Payment', paymentSchema);
 
 export default Payment;
+export type { IPayment };

@@ -1,4 +1,5 @@
 import { Ticket, ITicket } from '../models';
+import { TicketStatus } from '../types';
 import QRCodeService from './QRCodeService';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -11,7 +12,7 @@ export class TicketService {
     try {
       const ticketNumber = `TKT-${uuidv4().substring(0, 8).toUpperCase()}`;
       const { qrCode, qrImage } = await QRCodeService.generateTicketQR(ticketNumber, eventId, buyerId);
-      return await Ticket.create({ eventId, buyerId, ticketNumber, qrCode, qrCodeImage: qrImage, price, quantity });
+      return await Ticket.create({ event: eventId, user: buyerId, ticketNumber, qrCode, qrCodeData: qrImage, price, payment: quantity.toString(), reminder: 'not_sent' } as any);
     } catch (e) {
       console.error('Generate ticket error:', e);
       return null;
@@ -52,7 +53,7 @@ export class TicketService {
       if (ticket.status === 'used') return this.response('error', 'Ticket already used');
       if (ticket.status === 'cancelled') return this.response('error', 'Ticket has been cancelled');
 
-      ticket.status = 'used';
+      ticket.status = TicketStatus.USED;
       ticket.usedAt = new Date();
       await ticket.save();
       return this.response('success', 'QR code verified successfully', ticket);
