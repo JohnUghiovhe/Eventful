@@ -58,11 +58,15 @@ const startServer = async () => {
     // Connect to Redis
     await connectRedis();
 
-    // Fix any payment index issues
-    await fixPaymentIndex();
+    const shouldRunMaintenanceTasks = process.env.NODE_ENV !== 'production';
 
-    // Seed sample events
-    await seedEvents();
+    if (shouldRunMaintenanceTasks) {
+      // Fix any payment index issues
+      await fixPaymentIndex();
+
+      // Seed sample events
+      await seedEvents();
+    }
 
     // Start notification scheduler
     NotificationService.startScheduler();

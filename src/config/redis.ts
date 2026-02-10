@@ -26,6 +26,8 @@ export const connectRedis = async (): Promise<void> => {
   }
 };
 
+export const getRedisClient = () => redisClient;
+
 export const getCache = async (key: string): Promise<string | null> => {
   try {
     if (!redisClient.isOpen) return null;

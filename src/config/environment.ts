@@ -11,13 +11,14 @@ export const config = {
   MONGODB_URI: process.env.MONGODB_URI || 'mongodb://localhost:27017/eventful',
 
   // Redis
+  REDIS_URL: process.env.REDIS_URL || 'redis://localhost:6379',
   REDIS_HOST: process.env.REDIS_HOST || 'localhost',
   REDIS_PORT: parseInt(process.env.REDIS_PORT || '6379', 10),
   REDIS_PASSWORD: process.env.REDIS_PASSWORD,
 
   // JWT
   JWT_SECRET: process.env.JWT_SECRET || 'your-secret-key-change-in-production',
-  JWT_EXPIRY: process.env.JWT_EXPIRY || '7d',
+  JWT_EXPIRY: process.env.JWT_EXPIRY || process.env.JWT_EXPIRES_IN || '7d',
 
   // Paystack
   PAYSTACK_SECRET_KEY: process.env.PAYSTACK_SECRET_KEY,

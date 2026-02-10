@@ -27,20 +27,21 @@ REDIS_URL=redis://your-redis-url:port
 
 # JWT
 JWT_SECRET=your-super-secret-jwt-key-min-32-chars
-JWT_EXPIRES_IN=7d
+JWT_EXPIRY=7d
 
-# Paystack
-PAYSTACK_SECRET_KEY=pk_live_xxxxxxxxxxxxx
+# Paystack - Use SECRET key (sk_live_), not PUBLIC key (pk_live_)
+PAYSTACK_SECRET_KEY=sk_live_xxxxxxxxxxxxx
+PAYSTACK_PUBLIC_KEY=pk_live_xxxxxxxxxxxxx
 
 # Email
 EMAIL_HOST=smtp.gmail.com
 EMAIL_PORT=587
 EMAIL_USER=your-email@gmail.com
 EMAIL_PASSWORD=your-app-password
+EMAIL_FROM=noreply@eventful.com
 
 # Frontend
 FRONTEND_URL=https://eventful-frontend.onrender.com
-API_BASE_URL=https://eventful-api.onrender.com/api
 ```
 
 ### 1.2 Update Build Scripts
@@ -49,13 +50,16 @@ Ensure `package.json` has proper build scripts:
 ```json
 {
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && npm run copy-templates",
+    "copy-templates": "node -e \"const fs = require('fs'); const path = require('path'); const src = path.join(__dirname, 'src', 'templates'); const dest = path.join(__dirname, 'dist', 'templates'); if (fs.existsSync(src)) { fs.cpSync(src, dest, { recursive: true }); console.log('✅ Email templates copied to dist'); } else { console.log('ℹ️ No templates directory found'); }\"",
     "start": "node dist/index.js",
     "dev": "nodemon --exec ts-node src/index.ts",
     "db:cleanup": "ts-node src/scripts/dbCleanup.ts"
   }
 }
 ```
+
+**Note:** The `copy-templates` step ensures email templates are available in production (`dist` directory) for rendering confirmation emails and notifications.
 
 ### 1.3 Frontend Configuration
 
@@ -110,10 +114,23 @@ export default defineConfig({
    - Add all variables from your `.env.production` file:
      - `NODE_ENV=production`
      - `MONGODB_URI=mongodb+srv://...`
-     - `REDIS_URL=...`
-     - `JWT_SECRET=...`
-     - `PAYSTACK_SECRET_KEY=...`
-     - etc.
+     - `REDIS_URL=redis://...`
+     - `JWT_SECRET=your-32-char-secret-key`
+     - `JWT_EXPIRY=7d` (or 24h, etc.)
+     - `PAYSTACK_SECRET_KEY=sk_live_...` ⚠️ **Must use `sk_live_` (secret), not `pk_live_` (public)**
+     - `PAYSTACK_PUBLIC_KEY=pk_live_...` (optional, for client-side)
+     - `EMAIL_HOST=smtp.gmail.com`
+     - `EMAIL_PORT=587`
+     - `EMAIL_USER=your-email@gmail.com`
+     - `EMAIL_PASSWORD=your-app-password`
+     - `EMAIL_FROM=noreply@eventful.com`
+     - `FRONTEND_URL=https://eventful-frontend.onrender.com`
+
+   **Important Notes:**
+   - JWT_EXPIRY should use `JWT_EXPIRY` (not `JWT_EXPIRES_IN`)
+   - Paystack SECRET key is required for payments to work
+   - For Gmail, use [app-specific passwords](https://support.google.com/accounts/answer/185833), not your account password
+   - Email templates are automatically copied to dist during build
 
 6. **Choose Plan**
    - Select "Free" tier or paid tier
