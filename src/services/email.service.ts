@@ -6,6 +6,12 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+const resolveTemplateDir = () => {
+  const distPath = path.resolve(__dirname, '..', 'templates');
+  const srcPath = path.resolve(process.cwd(), 'src', 'templates');
+  return process.env.NODE_ENV === 'production' ? distPath : srcPath;
+};
+
 const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST || 'smtp.gmail.com',
   port: parseInt(process.env.EMAIL_PORT || '587'),
@@ -20,10 +26,10 @@ const transporter = nodemailer.createTransport({
 const handlebarOptions: any = {
   viewEngine: {
     extName: '.hbs',
-    partialsDir: path.resolve('./src/templates/'),
+    partialsDir: resolveTemplateDir(),
     defaultLayout: false
   },
-  viewPath: path.resolve('./src/templates/'),
+  viewPath: resolveTemplateDir(),
   extName: '.hbs'
 };
 
