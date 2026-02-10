@@ -223,6 +223,32 @@ Redeploy backend after changes.
 
 ### Common Issues & Solutions
 
+### MongoDB disconnects during build
+
+**Error**: `MongooseServerSelectionError` or `ReplicaSetNoPrimary`
+
+This means Render cannot reach your MongoDB Atlas cluster. Common causes:
+
+1. **IP Access List** (most common):
+   - Go to Atlas → Network Access → Add IP Address
+   - Add `0.0.0.0/0` to allow all IPs (quick fix for Render free tier)
+   - Render free tier uses rotating IPs, so specific IP whitelisting often fails
+   - Atlas guide: [Configure IP Access List](https://www.mongodb.com/docs/atlas/security-whitelist/)
+
+2. **Cluster is paused**:
+   - Go to Atlas → Clusters → Check if cluster shows "Paused"
+   - Click "Resume" if paused (free tier auto-pauses after inactivity)
+
+3. **Connection string issues**:
+   - Verify you're using `mongodb+srv://` format (not `mongodb://`)
+   - URL-encode special characters in username/password (e.g., `@` → `%40`, `#` → `%23`)
+   - Ensure database name is included: `...mongodb.net/eventful?retryWrites=true&w=majority`
+
+4. **Database user permissions**:
+   - Go to Atlas → Database Access
+   - Verify user has "Read and write to any database" or specific database access
+   - Check username/password match your `MONGODB_URI` env variable
+
 **Issue**: Build fails with "Cannot find module"
 - **Solution**: Ensure all dependencies are in `package.json` (not global)
 - Run `npm install` locally and commit `package-lock.json`
