@@ -92,3 +92,4 @@ eventSchema.index({ tags: 1 });
 const Event = mongoose.model<IEvent>('Event', eventSchema);
 
 export default Event;
+export type { IEvent };

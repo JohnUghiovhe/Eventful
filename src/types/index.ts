@@ -20,10 +20,14 @@ export enum TicketStatus {
   USED = 'used'
 }
 
+// Alias for service compatibility
+export const TICKET_STATUS_USED = 'used';
+
 export enum PaymentStatus {
   PENDING = 'pending',
   SUCCESS = 'success',
   FAILED = 'failed',
+  COMPLETED = 'completed',
   REFUNDED = 'refunded'
 }
 
@@ -96,6 +100,7 @@ export interface ITicket extends Document {
   status: TicketStatus;
   purchaseDate: Date;
   scannedAt?: Date;
+  usedAt?: Date;
   reminder: ReminderPeriod;
   price: number;
   payment: string;
@@ -112,8 +117,10 @@ export interface IPayment extends Document {
   currency: string;
   status: PaymentStatus;
   paystackReference: string;
+  paystackAuthorizationUrl?: string;
   paystackResponse?: any;
   metadata?: any;
+  refundedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -142,6 +149,9 @@ export interface INotification extends Document {
   };
   read: boolean;
   readAt?: Date;
+  scheduledFor?: Date;
+  sent?: boolean;
+  sentAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }

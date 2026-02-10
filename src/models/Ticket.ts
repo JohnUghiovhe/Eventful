@@ -65,3 +65,4 @@ ticketSchema.index({ status: 1 });
 const Ticket = mongoose.model<ITicket>('Ticket', ticketSchema);
 
 export default Ticket;
+export type { ITicket };

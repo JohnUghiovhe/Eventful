@@ -31,7 +31,7 @@ export class AuthService {
       firstName: user.firstName,
       lastName: user.lastName,
       email: user.email,
-      phone: user.phone,
+      phone: user.phoneNumber,
       role: user.role,
       ...(includeProfileImage && { profileImage: user.profileImage }),
       createdAt: user.createdAt,

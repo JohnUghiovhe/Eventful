@@ -31,6 +31,16 @@ const notificationSchema = new Schema<INotification>(
     },
     readAt: {
       type: Date
+    },
+    scheduledFor: {
+      type: Date
+    },
+    sent: {
+      type: Boolean,
+      default: false
+    },
+    sentAt: {
+      type: Date
     }
   },
   {
@@ -46,3 +56,4 @@ notificationSchema.index({ user: 1, type: 1 });
 const Notification = mongoose.model<INotification>('Notification', notificationSchema);
 
 export default Notification;
+export type { INotification };
