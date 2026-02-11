@@ -105,6 +105,7 @@ GET /api/events?page=1&limit=10&category=concert&search=music&status=published
 #### Get Event by ID
 ```http
 GET /api/events/id
+Authorization: Bearer <token>
 ```
 
 #### Get My Events (Creator only)
@@ -160,10 +161,78 @@ Authorization: Bearer <token>
 #### Get Share Links
 ```http
 GET /api/events/id/share
+Authorization: Bearer <token>
 ```
 
 ---
 
+### Payments
+
+#### Initialize Payment (Eventee only)
+```http
+POST /api/payments/initialize
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "eventId": "event_id_here",
+  "reminder": "1_day"  // optional, defaults to event's default reminder
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Payment initialized",
+  "data": {
+    "paymentUrl": "https://checkout.paystack.com/...",
+    "reference": "REF-XXX-YYY",
+    "accessCode": "access_code_here"
+  }
+}
+```
+
+#### Verify Payment (Eventee only)
+```http
+POST /api/payments/verify
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "reference": "REF-XXX-YYY"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Payment verified and ticket issued",
+  "data": {
+    "payment": { ... },
+    "ticket": {
+      "ticketNumber": "TKT-XXX-YYY",
+      "qrCode": "data:image/png;base64,...",
+      "status": "paid"
+    }
+  }
+}
+```
+
+#### Get My Payments (Eventee only)
+```http
+GET /api/payments
+Authorization: Bearer <token>
+```
+
+#### Get Event Payments (Creator only)
+```http
+GET /api/payments/event/eventId
+Authorization: Bearer <token>
+```
+
+---
 ### Tickets
 
 #### Get My Tickets (Eventee only)
@@ -251,74 +320,6 @@ Content-Type: application/json
 #### Get Event Attendees (Creator only)
 ```http
 GET /api/tickets/event/eventId/attendees
-Authorization: Bearer <token>
-```
-
----
-
-### Payments
-
-#### Initialize Payment (Eventee only)
-```http
-POST /api/payments/initialize
-Authorization: Bearer <token>
-Content-Type: application/json
-
-{
-  "eventId": "event_id_here",
-  "reminder": "1_day"  // optional, defaults to event's default reminder
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Payment initialized",
-  "data": {
-    "paymentUrl": "https://checkout.paystack.com/...",
-    "reference": "REF-XXX-YYY",
-    "accessCode": "access_code_here"
-  }
-}
-```
-
-#### Verify Payment (Eventee only)
-```http
-POST /api/payments/verify
-Authorization: Bearer <token>
-Content-Type: application/json
-
-{
-  "reference": "REF-XXX-YYY"
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Payment verified and ticket issued",
-  "data": {
-    "payment": { ... },
-    "ticket": {
-      "ticketNumber": "TKT-XXX-YYY",
-      "qrCode": "data:image/png;base64,...",
-      "status": "paid"
-    }
-  }
-}
-```
-
-#### Get My Payments (Eventee only)
-```http
-GET /api/payments
-Authorization: Bearer <token>
-```
-
-#### Get Event Payments (Creator only)
-```http
-GET /api/payments/event/eventId
 Authorization: Bearer <token>
 ```
 

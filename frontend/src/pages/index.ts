@@ -10,4 +10,5 @@ export { default as MyTickets } from './MyTickets';
 export { default as TicketDetails } from './TicketDetails';
 export { default as Analytics } from './Analytics';
 export { default as PaymentVerify } from './PaymentVerify';
+export { default as PaymentSuccess } from './PaymentSuccess';
 

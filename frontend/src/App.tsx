@@ -21,6 +21,7 @@ import MyTickets from './pages/MyTickets';
 import TicketDetails from './pages/TicketDetails';
 import Analytics from './pages/Analytics';
 import PaymentVerify from './pages/PaymentVerify';
+import PaymentSuccess from './pages/PaymentSuccess';
 import VerifyTickets from './pages/VerifyTickets';
 import InactivityWrapper from './components/InactivityWrapper';
 
@@ -119,6 +120,14 @@ const App: React.FC = () => {
                     element={
                       <PrivateRoute requireEventee>
                         <PaymentVerify />
+                      </PrivateRoute>
+                    }
+                  />
+                  <Route
+                    path="/payment/success"
+                    element={
+                      <PrivateRoute requireEventee>
+                        <PaymentSuccess />
                       </PrivateRoute>
                     }
                   />
