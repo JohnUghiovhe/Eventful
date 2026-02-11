@@ -104,7 +104,17 @@ export class TicketController {
       const event: any = ticket.event;
 
       // Check if the current user is the event creator
-      if (event.creator.toString() !== req.user!.id) {
+      const eventCreatorId = event.creator?.toString() || event.creator;
+      const currentUserId = req.user!.id?.toString() || req.user!.id;
+      
+      Logger.info('Ticket verification authorization:', {
+        eventCreatorId,
+        currentUserId,
+        ticketNumber,
+        match: eventCreatorId === currentUserId
+      });
+
+      if (eventCreatorId !== currentUserId) {
         res.status(403).json({
           success: false,
           message: 'Unauthorized: You are not the event creator'
@@ -170,7 +180,10 @@ export class TicketController {
       const event: any = ticket.event;
 
       // Check if the current user is the event creator
-      if (event.creator.toString() !== req.user!.id) {
+      const eventCreatorId = event.creator?.toString() || event.creator;
+      const currentUserId = req.user!.id?.toString() || req.user!.id;
+
+      if (eventCreatorId !== currentUserId) {
         res.status(403).json({
           success: false,
           message: 'Unauthorized: You are not the event creator'
@@ -323,7 +336,10 @@ export class TicketController {
       const event: any = ticket.event;
 
       // Check if the current user is the event creator
-      if (event.creator.toString() !== req.user!.id) {
+      const eventCreatorId = event.creator?.toString() || event.creator;
+      const currentUserId = req.user!.id?.toString() || req.user!.id;
+
+      if (eventCreatorId !== currentUserId) {
         res.status(403).json({
           success: false,
           message: 'Unauthorized: You are not the event creator'
@@ -383,7 +399,10 @@ export class TicketController {
       const event: any = ticket.event;
 
       // Check if the current user is the event creator
-      if (event.creator.toString() !== req.user!.id) {
+      const eventCreatorId = event.creator?.toString() || event.creator;
+      const currentUserId = req.user!.id?.toString() || req.user!.id;
+
+      if (eventCreatorId !== currentUserId) {
         res.status(403).json({
           success: false,
           message: 'Unauthorized: You are not the event creator'

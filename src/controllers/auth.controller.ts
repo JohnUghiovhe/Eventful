@@ -48,7 +48,8 @@ export class AuthController {
       // Generate JWT token
       const token = jwt.sign(
         { id: user._id.toString(), email: user.email, role: user.role },
-        JWT_SECRET as jwt.Secret
+        JWT_SECRET as jwt.Secret,
+        { expiresIn: '7d' }
       );
 
       res.status(201).json({
@@ -110,7 +111,8 @@ export class AuthController {
           // Generate JWT token
           const token = jwt.sign(
             { id: fullUser._id.toString(), email: fullUser.email, role: fullUser.role },
-            JWT_SECRET as jwt.Secret
+            JWT_SECRET as jwt.Secret,
+            { expiresIn: '7d' }
           );
 
           Logger.info('Login successful:', { email: fullUser.email, id: fullUser._id });

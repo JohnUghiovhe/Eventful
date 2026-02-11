@@ -28,7 +28,7 @@ Eventful is a comprehensive event ticketing and management platform that connect
 - ✅ **Redis Caching**: Cache layer for improved performance
 - ✅ **Rate Limiting**: Protect API endpoints from abuse
 - ✅ **Unit & Integration Tests**: Comprehensive test coverage
-- ✅ **API Documentation**: Complete REST API documentation
+- ✅ **Swagger UI**: Interactive API documentation with try-it-out functionality
 
 ## Tech Stack
 
@@ -178,7 +178,32 @@ npm run format
 
 ## API Documentation
 
-Full API documentation is available in [API_DOCUMENTATION.md](./API_DOCUMENTATION.md)
+### 🚀 Interactive API Documentation (Swagger UI)
+
+Explore and test all API endpoints through our interactive Swagger UI interface:
+
+- **Local Development**: [http://localhost:5000/api-docs](http://localhost:5000/api-docs)
+- **Production**: [https://eventful-api.onrender.com/api-docs](https://eventful-api.onrender.com/api-docs)
+
+**Features:**
+- 📚 Complete endpoint documentation with request/response schemas
+- 🔐 Built-in authentication testing
+- 🎯 Try out API calls directly from the browser
+- 📊 View all available parameters and response codes
+- 💡 See example requests and responses
+
+**Getting Started with Swagger:**
+1. Visit the Swagger UI URL
+2. Register/Login to get a JWT token
+3. Click "Authorize" button at the top
+4. Enter your token as: `Bearer <your_token>`
+5. Test any endpoint directly in the browser
+
+For a detailed guide on using Swagger UI, see [SWAGGER_GUIDE.md](./SWAGGER_GUIDE.md)
+
+### 📖 Static Documentation
+
+Full API documentation is also available in [API_DOCUMENTATION.md](./API_DOCUMENTATION.md)
 
 ### Quick Start
 

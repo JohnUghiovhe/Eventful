@@ -34,12 +34,12 @@ passport.use(
 
         Logger.info('LocalStrategy authentication successful:', { email });
         return done(null, { 
-          id: user._id, 
+          id: user._id.toString(), 
           email: user.email, 
           role: user.role,
           firstName: user.firstName,
           lastName: user.lastName,
-          _id: user._id
+          _id: user._id.toString()
         });
       } catch (error) {
         Logger.error('LocalStrategy error:', error);
@@ -58,12 +58,24 @@ const jwtOptions: StrategyOptions = {
 passport.use(
   new JwtStrategy(jwtOptions, async (payload: any, done: any) => {
     try {
-      const user = await User.findById(payload.id);
-      if (user) {
-        return done(null, { id: user._id, email: user.email, role: user.role });
+      const userId = payload.id || payload.userId;
+      if (!userId) {
+        Logger.warn('JWT payload missing user ID:', { payload });
+        return done(null, false);
       }
+      
+      const user = await User.findById(userId);
+      if (user) {
+        return done(null, { 
+          id: user._id.toString(), 
+          email: user.email, 
+          role: user.role 
+        });
+      }
+      Logger.warn('User not found for token:', { userId });
       return done(null, false);
     } catch (error) {
+      Logger.error('JWT Strategy error:', error);
       return done(error, false);
     }
   })

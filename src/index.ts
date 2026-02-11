@@ -2,6 +2,7 @@ import express, { Application } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
+import swaggerUi from 'swagger-ui-express';
 import { connectDB } from './config/database';
 import { connectRedis } from './config/redis';
 import passport from './config/passport';
@@ -11,6 +12,7 @@ import { NotificationService } from './services/notification.service';
 import { Logger } from './utils/logger';
 import { seedEvents } from './scripts/seed';
 import { fixPaymentIndex } from './scripts/fixPaymentIndex';
+import { swaggerSpec } from './config/swagger';
 
 dotenv.config();
 
@@ -69,6 +71,13 @@ app.get('/health', (_req, res) => {
   });
 });
 
+// Swagger API Documentation
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: 'Eventful API Documentation',
+  customfavIcon: '/favicon.ico'
+}));
+
 // Routes
 app.use('/api', routes);
 
@@ -99,7 +108,7 @@ const startServer = async () => {
 
     app.listen(PORT, () => {
       Logger.info(`🚀 Server is running on port ${PORT}`);
-      Logger.info(`📚 API Documentation: http://localhost:${PORT}/api/health`);
+      Logger.info(`📚 API Documentation available at: http://localhost:${PORT}/api-docs`);
     });
   } catch (error) {
     Logger.error('Failed to start server:', error);
