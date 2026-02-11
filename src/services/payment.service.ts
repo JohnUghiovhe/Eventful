@@ -1,11 +1,15 @@
 import axios from 'axios';
 import { Logger } from '../utils/logger';
+import { config } from '../config/environment';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
 const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY || '';
 const PAYSTACK_BASE_URL = 'https://api.paystack.co';
+
+// Get frontend URL from config (defaults to http://localhost:5173 for dev, https://yourdomain.com for prod)
+const FRONTEND_URL = config.FRONTEND_URL;
 
 // Check if Paystack is properly configured
 const isPaystackConfigured = () => {
@@ -58,7 +62,7 @@ export class PaymentService {
           status: true,
           message: 'Demo payment initialized',
           data: {
-            authorization_url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/payment/success?reference=${reference}&demo=true`,
+            authorization_url: `${FRONTEND_URL}/payment/success?reference=${reference}&demo=true`,
             access_code: 'demo_access_code',
             reference: reference
           }
@@ -72,7 +76,7 @@ export class PaymentService {
           amount: amount * 100, // Convert to kobo
           reference,
           metadata,
-          callback_url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/payment/success`
+          callback_url: `${FRONTEND_URL}/payment/success`
         },
         {
           headers: {

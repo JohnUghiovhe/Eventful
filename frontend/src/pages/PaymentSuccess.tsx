@@ -21,10 +21,13 @@ const PaymentSuccess: React.FC = () => {
     const verifyPayment = async () => {
       try {
         if (!reference) {
+          console.error('No payment reference in URL');
           setError('No payment reference found');
           setLoading(false);
           return;
         }
+
+        console.log('Verifying payment with reference:', reference);
 
         // Handle demo mode (no backend verification needed)
         if (demo === 'true') {
@@ -61,26 +64,37 @@ const PaymentSuccess: React.FC = () => {
         }
 
         // Verify payment with backend
+        console.log('Calling /payments/verify endpoint');
         const verifyResponse = await api.post('/payments/verify', { reference });
         
-        if (verifyResponse.data.success) {
+        console.log('Payment verification response:', verifyResponse.data);
+        
+        if (verifyResponse.data.success && verifyResponse.data.data) {
           // Get the ticket details
-          const ticketResponse = await api.get(`/tickets/${verifyResponse.data.data.ticketId}`);
-          if (ticketResponse.data.success) {
-            setTicket(ticketResponse.data.data);
-            
-            // Get event details
-            const eventResponse = await api.get(`/events/${ticketResponse.data.data.event}`);
-            if (eventResponse.data.success) {
-              setEvent(eventResponse.data.data);
+          const ticketId = verifyResponse.data.data.ticketId || verifyResponse.data.data.ticket?._id;
+          if (ticketId) {
+            const ticketResponse = await api.get(`/tickets/${ticketId}`);
+            if (ticketResponse.data.success) {
+              setTicket(ticketResponse.data.data);
+              
+              // Get event details
+              const eventId = ticketResponse.data.data.event;
+              const eventResponse = await api.get(`/events/${eventId}`);
+              if (eventResponse.data.success) {
+                setEvent(eventResponse.data.data);
+              }
             }
+          } else {
+            console.error('No ticketId in verification response:', verifyResponse.data);
+            setError('Ticket information not found');
           }
         } else {
+          console.error('Payment verification failed:', verifyResponse.data);
           setError(verifyResponse.data.message || 'Payment verification failed');
         }
       } catch (err: any) {
         console.error('Payment verification error:', err);
-        setError(err.response?.data?.message || 'Failed to verify payment');
+        setError(err.response?.data?.message || err.message || 'Failed to verify payment');
       } finally {
         setLoading(false);
       }
