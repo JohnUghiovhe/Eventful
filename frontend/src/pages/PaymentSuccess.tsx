@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useQuery } from 'react-query';
 import { format } from 'date-fns';
 import QRCode from 'react-qr-code';
 import api from '../services/api';
@@ -30,30 +29,30 @@ const PaymentSuccess: React.FC = () => {
         // Handle demo mode (no backend verification needed)
         if (demo === 'true') {
           console.log('Demo mode - showing sample ticket');
-          // Create demo ticket and event
-          const demoEvent: Event = {
+          // Create demo ticket and event using type assertion
+          const demoEvent = {
             _id: 'demo-event',
             title: 'Demo Event',
             description: 'This is a demo event. No actual payment was made.',
-            eventDate: new Date().toISOString(),
-            location: 'Demo Location',
+            startDate: new Date().toISOString(),
+            endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+            location: { address: 'Demo Address', city: 'Demo City', state: 'Demo State', country: 'Nigeria' } as any,
             ticketPrice: 5000,
-            image: undefined,
+            images: [],
             creator: 'demo-creator',
             capacity: 100,
             ticketsSold: 1,
-            status: 'published'
-          } as Event;
+            status: 'published' as const
+          } as unknown as Event;
 
-          const demoTicket: Ticket = {
+          const demoTicket = {
             _id: 'demo-ticket',
             ticketNumber: `DEMO-${Date.now()}`,
             event: 'demo-event',
             user: 'demo-user',
             payment: 'demo-payment',
-            ticketType: 'General Admission',
-            status: 'valid'
-          } as Ticket;
+            status: 'valid' as const
+          } as unknown as Ticket;
 
           setTicket(demoTicket);
           setEvent(demoEvent);
@@ -122,7 +121,7 @@ const PaymentSuccess: React.FC = () => {
               <div 
                 className="h-48 bg-gradient-to-r from-indigo-600 to-purple-600 relative"
                 style={{
-                  backgroundImage: event.image ? `url(${event.image})` : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  backgroundImage: event.images && event.images.length > 0 ? `url(${event.images[0]})` : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                   backgroundSize: 'cover',
                   backgroundPosition: 'center'
                 }}
@@ -138,18 +137,20 @@ const PaymentSuccess: React.FC = () => {
                   <div>
                     <p className="text-gray-500 dark:text-gray-400 text-sm font-semibold mb-1">DATE</p>
                     <p className="text-lg font-bold text-gray-900 dark:text-white">
-                      {format(new Date(event.eventDate), 'dd MMM yyyy')}
+                      {format(new Date(event.startDate), 'dd MMM yyyy')}
                     </p>
                   </div>
                   <div>
                     <p className="text-gray-500 dark:text-gray-400 text-sm font-semibold mb-1">TIME</p>
                     <p className="text-lg font-bold text-gray-900 dark:text-white">
-                      {format(new Date(event.eventDate), 'HH:mm')}
+                      {format(new Date(event.startDate), 'HH:mm')}
                     </p>
                   </div>
                   <div>
                     <p className="text-gray-500 dark:text-gray-400 text-sm font-semibold mb-1">LOCATION</p>
-                    <p className="text-lg font-bold text-gray-900 dark:text-white">{event.location}</p>
+                    <p className="text-lg font-bold text-gray-900 dark:text-white">{
+                      typeof event.location === 'string' ? event.location : event.location?.city || 'TBA'
+                    }</p>
                   </div>
                   <div>
                     <p className="text-gray-500 dark:text-gray-400 text-sm font-semibold mb-1">PRICE</p>
@@ -177,7 +178,6 @@ const PaymentSuccess: React.FC = () => {
                         value={ticket.ticketNumber || 'ticket'} 
                         size={200}
                         level="H"
-                        includeMargin={true}
                       />
                     </div>
                     <p className="text-sm text-gray-600 dark:text-gray-300 mt-4 text-center">
@@ -201,19 +201,21 @@ const PaymentSuccess: React.FC = () => {
                       </div>
                       <div>
                         <p className="text-gray-500 dark:text-gray-400 text-xs font-semibold uppercase mb-1">Ticket Type</p>
-                        <p className="font-bold text-gray-900 dark:text-white">{ticket.ticketType || 'General Admission'}</p>
+                        <p className="font-bold text-gray-900 dark:text-white">General Admission</p>
                       </div>
                       <div>
                         <p className="text-gray-500 dark:text-gray-400 text-xs font-semibold uppercase mb-1">Date</p>
-                        <p className="font-bold text-gray-900 dark:text-white">{format(new Date(event.eventDate), 'MMM dd, yyyy')}</p>
+                        <p className="font-bold text-gray-900 dark:text-white">{format(new Date(event.startDate), 'MMM dd, yyyy')}</p>
                       </div>
                       <div>
                         <p className="text-gray-500 dark:text-gray-400 text-xs font-semibold uppercase mb-1">Time</p>
-                        <p className="font-bold text-gray-900 dark:text-white">{format(new Date(event.eventDate), 'HH:mm aaa')}</p>
+                        <p className="font-bold text-gray-900 dark:text-white">{format(new Date(event.startDate), 'HH:mm aaa')}</p>
                       </div>
                       <div className="col-span-2">
                         <p className="text-gray-500 dark:text-gray-400 text-xs font-semibold uppercase mb-1">Venue</p>
-                        <p className="font-bold text-gray-900 dark:text-white">{event.location}</p>
+                        <p className="font-bold text-gray-900 dark:text-white">{
+                          typeof event.location === 'string' ? event.location : `${event.location?.address}, ${event.location?.city}` || 'TBA'
+                        }</p>
                       </div>
                     </div>
 
