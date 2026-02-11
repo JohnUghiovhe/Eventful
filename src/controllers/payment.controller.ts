@@ -159,16 +159,25 @@ export class PaymentController {
 
       // Check if already verified
       if (payment.status === PaymentStatus.SUCCESS) {
-        const ticket = await Ticket.findOne({ payment: payment._id.toString() } as any)
-          .populate('event')
-          .populate('user', 'firstName lastName email');
-        Logger.info(`Payment already verified: ${reference}`, { ticketId: ticket?._id });
-        res.status(200).json({
-          success: true,
-          message: 'Payment already verified',
-          data: { payment, ticket }
-        });
-        return;
+        try {
+          const ticket = await Ticket.findOne({ payment: payment._id.toString() } as any)
+            .populate('event')
+            .populate('user', 'firstName lastName email');
+          
+          if (ticket) {
+            Logger.info(`Payment already verified: ${reference}`, { ticketId: ticket._id });
+            res.status(200).json({
+              success: true,
+              message: 'Payment already verified',
+              data: { payment, ticket }
+            });
+            return;
+          } else {
+            Logger.warn(`Payment marked as success but no ticket found: ${reference}`);
+          }
+        } catch (error) {
+          Logger.error('Error fetching existing ticket:', error);
+        }
       }
 
       // Verify with Paystack
@@ -204,52 +213,79 @@ export class PaymentController {
 
       const qrCode = await QRCodeService.generateQRCode(qrCodeData);
 
-      // Create ticket
-      let ticket: any = await Ticket.create({
-        ticketNumber: payment.metadata.ticketNumber,
-        event: event._id,
-        user: payment.user,
-        qrCode,
-        qrCodeData: JSON.stringify(qrCodeData),
-        status: TicketStatus.PAID,
-        price: payment.amount,
-        payment: payment._id.toString(),
-        reminder: payment.metadata.reminder || event.defaultReminder
+      // Check if ticket already exists (race condition prevention)
+      let ticket: any = await Ticket.findOne({
+        ticketNumber: payment.metadata.ticketNumber
       });
+
+      let isNewTicket = false;
+
+      // Create ticket only if it doesn't exist
+      if (!ticket) {
+        ticket = await Ticket.create({
+          ticketNumber: payment.metadata.ticketNumber,
+          event: event._id,
+          user: payment.user,
+          qrCode,
+          qrCodeData: JSON.stringify(qrCodeData),
+          status: TicketStatus.PAID,
+          price: payment.amount,
+          payment: payment._id.toString(),
+          reminder: payment.metadata.reminder || event.defaultReminder
+        });
+
+        isNewTicket = true;
+        Logger.info(`Ticket created: ${payment.metadata.ticketNumber}`, { ticketId: ticket._id });
+      } else {
+        Logger.info(`Ticket already exists: ${payment.metadata.ticketNumber}`, { ticketId: ticket._id });
+      }
 
       // Refetch ticket with populated event and user data
       ticket = await Ticket.findById(ticket._id)
         .populate('event')
         .populate('user', 'firstName lastName email');
 
-      // Update payment with ticket reference
-      payment.ticket = ticket._id;
-      await payment.save();
+      // Update payment with ticket reference (if not already set)
+      if (!payment.ticket || payment.ticket.toString() !== ticket._id.toString()) {
+        payment.ticket = ticket._id;
+        await payment.save();
+      }
 
-      // Update event available tickets
-      event.availableTickets -= 1;
-      await event.save();
+      // Update event available tickets only if we just created the ticket
+      if (isNewTicket && event.availableTickets > 0) {
+        event.availableTickets -= 1;
+        await event.save();
+      }
 
-      // Create reminder
-      const reminderDate = calculateReminderDate(
-        event.startDate,
-        ticket.reminder
-      );
-      await NotificationService.createReminder(
-        payment.user.toString(),
-        event._id.toString(),
-        ticket._id.toString(),
-        reminderDate
-      );
+      // Create reminder only for new tickets
+      if (isNewTicket) {
+        const reminderDate = calculateReminderDate(
+          event.startDate,
+          ticket.reminder
+        );
+        await NotificationService.createReminder(
+          payment.user.toString(),
+          event._id.toString(),
+          ticket._id.toString(),
+          reminderDate
+        );
+      }
 
-      // Send confirmation email
-      await EmailService.sendTicketConfirmation(user!.email, {
-        eventTitle: event.title,
-        ticketNumber: ticket.ticketNumber,
-        eventDate: event.startDate.toLocaleString(),
-        venue: event.venue,
-        qrCode
-      });
+      // Send confirmation email only for new tickets
+      if (isNewTicket) {
+        try {
+          await EmailService.sendTicketConfirmation(user!.email, {
+            eventTitle: event.title,
+            ticketNumber: ticket.ticketNumber,
+            eventDate: event.startDate.toLocaleString(),
+            venue: event.venue,
+            qrCode
+          });
+        } catch (emailError) {
+          Logger.error('Failed to send confirmation email:', emailError);
+          // Don't fail the payment verification if email fails
+        }
+      }
 
       Logger.info(`Payment verification successful: ${reference}`, { ticketId: ticket._id });
       res.status(200).json({

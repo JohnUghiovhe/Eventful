@@ -1,6 +1,7 @@
 import React, { ReactNode } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import LoadingSpinner from './LoadingSpinner';
 
 interface PrivateRouteProps {
   children: ReactNode;
@@ -13,7 +14,12 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({
   requireCreator,
   requireEventee,
 }) => {
-  const { isAuthenticated, isCreator, isEventee } = useAuth();
+  const { isAuthenticated, isCreator, isEventee, isLoadingAuth } = useAuth();
+
+  // Show loading spinner while auth is being verified
+  if (isLoadingAuth) {
+    return <LoadingSpinner />;
+  }
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;

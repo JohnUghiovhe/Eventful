@@ -1,5 +1,5 @@
-import jwt from 'jsonwebtoken';
-import config from '../config/environment';
+import * as jwt from 'jsonwebtoken';
+import { config } from '../config/environment';
 import { IUser } from '../models';
 
 export interface ITokenPayload {
@@ -21,9 +21,9 @@ export class JWTService {
       role: user.role,
     };
 
-    return jwt.sign(payload, config.JWT_SECRET, {
-      expiresIn: '7d',
-    });
+    const expiresIn = config.JWT_EXPIRY || '7d';
+    
+    return jwt.sign(payload, config.JWT_SECRET as string, { expiresIn } as any);
   }
 
   static verifyToken(token: string): IDecodedToken {

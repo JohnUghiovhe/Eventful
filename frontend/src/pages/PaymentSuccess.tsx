@@ -16,8 +16,19 @@ const PaymentSuccess: React.FC = () => {
   const [event, setEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const verifyAttemptRef = React.useRef<string | null>(null);
 
   useEffect(() => {
+    // Prevent duplicate verification calls (handles React StrictMode in development)
+    if (verifyAttemptRef.current === reference) {
+      console.log('Payment verification already in progress for this reference:', reference);
+      return;
+    }
+
+    if (reference) {
+      verifyAttemptRef.current = reference;
+    }
+
     const verifyPayment = async () => {
       try {
         if (!reference) {
@@ -101,8 +112,33 @@ const PaymentSuccess: React.FC = () => {
       } catch (err: any) {
         console.error('Payment verification error:', err);
         console.error('Error response:', err.response?.data);
-        const errorMsg = err.response?.data?.message || err.message || err.response?.data?.error || 'Failed to verify payment';
-        setError(errorMsg);
+        
+        // Handle duplicate ticket creation (E11000 unique constraint error)
+        const errorMessage = err.response?.data?.message || err.message || err.response?.data?.error || 'Failed to verify payment';
+        const isDuplicateKeyError = errorMessage.includes('E11000') || errorMessage.includes('duplicate');
+        
+        if (isDuplicateKeyError) {
+          console.info('Duplicate ticket detected (E11000), retrying verification...');
+          try {
+            // Wait a moment and retry
+            await new Promise(resolve => setTimeout(resolve, 500));
+            const retryResponse = await api.post('/payments/verify-public', { reference });
+            
+            if (retryResponse.data.success && retryResponse.data.data?.ticket) {
+              console.info('Successfully retrieved existing ticket after duplicate error');
+              setTicket(retryResponse.data.data.ticket);
+              if (retryResponse.data.data.payment?.event) {
+                setEvent(retryResponse.data.data.payment.event);
+              }
+              setLoading(false);
+              return;
+            }
+          } catch (retryErr) {
+            console.error('Retry verification failed:', retryErr);
+          }
+        }
+        
+        setError(errorMessage);
       } finally {
         setLoading(false);
       }
