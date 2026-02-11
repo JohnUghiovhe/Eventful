@@ -54,8 +54,13 @@ app.use(express.urlencoded({ extended: true }));
 // Passport middleware
 app.use(passport.initialize());
 
+// Root endpoint
+app.get('/', (_req, res) => {
+  res.send('Eventful API is running');
+});
+
 // Health check endpoint
-app.get('/health', (req, res) => {
+app.get('/health', (_req, res) => {
   res.json({ 
     status: 'ok', 
     message: 'Backend is running',

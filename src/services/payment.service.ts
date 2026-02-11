@@ -58,7 +58,7 @@ export class PaymentService {
           status: true,
           message: 'Demo payment initialized',
           data: {
-            authorization_url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/payment/verify?reference=${reference}&demo=true`,
+            authorization_url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/payment/success?reference=${reference}&demo=true`,
             access_code: 'demo_access_code',
             reference: reference
           }
@@ -72,7 +72,7 @@ export class PaymentService {
           amount: amount * 100, // Convert to kobo
           reference,
           metadata,
-          callback_url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/payment/verify`
+          callback_url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/payment/success`
         },
         {
           headers: {

@@ -1,0 +1,259 @@
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useQuery } from 'react-query';
+import { format } from 'date-fns';
+import QRCode from 'react-qr-code';
+import api from '../services/api';
+import Navbar from '../components/Navbar';
+import LoadingSpinner from '../components/LoadingSpinner';
+import { Ticket, Event } from '../types';
+
+const PaymentSuccess: React.FC = () => {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const reference = searchParams.get('reference');
+  const demo = searchParams.get('demo');
+  const [ticket, setTicket] = useState<Ticket | null>(null);
+  const [event, setEvent] = useState<Event | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const verifyPayment = async () => {
+      try {
+        if (!reference) {
+          setError('No payment reference found');
+          setLoading(false);
+          return;
+        }
+
+        // Handle demo mode (no backend verification needed)
+        if (demo === 'true') {
+          console.log('Demo mode - showing sample ticket');
+          // Create demo ticket and event
+          const demoEvent: Event = {
+            _id: 'demo-event',
+            title: 'Demo Event',
+            description: 'This is a demo event. No actual payment was made.',
+            eventDate: new Date().toISOString(),
+            location: 'Demo Location',
+            ticketPrice: 5000,
+            image: undefined,
+            creator: 'demo-creator',
+            capacity: 100,
+            ticketsSold: 1,
+            status: 'published'
+          } as Event;
+
+          const demoTicket: Ticket = {
+            _id: 'demo-ticket',
+            ticketNumber: `DEMO-${Date.now()}`,
+            event: 'demo-event',
+            user: 'demo-user',
+            payment: 'demo-payment',
+            ticketType: 'General Admission',
+            status: 'valid'
+          } as Ticket;
+
+          setTicket(demoTicket);
+          setEvent(demoEvent);
+          setLoading(false);
+          return;
+        }
+
+        // Verify payment with backend
+        const verifyResponse = await api.post('/payments/verify', { reference });
+        
+        if (verifyResponse.data.success) {
+          // Get the ticket details
+          const ticketResponse = await api.get(`/tickets/${verifyResponse.data.data.ticketId}`);
+          if (ticketResponse.data.success) {
+            setTicket(ticketResponse.data.data);
+            
+            // Get event details
+            const eventResponse = await api.get(`/events/${ticketResponse.data.data.event}`);
+            if (eventResponse.data.success) {
+              setEvent(eventResponse.data.data);
+            }
+          }
+        } else {
+          setError(verifyResponse.data.message || 'Payment verification failed');
+        }
+      } catch (err: any) {
+        console.error('Payment verification error:', err);
+        setError(err.response?.data?.message || 'Failed to verify payment');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    verifyPayment();
+  }, [reference, demo]);
+
+  if (loading) return <LoadingSpinner />;
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-green-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      <Navbar />
+      
+      <div className="max-w-4xl mx-auto px-4 py-12">
+        {error ? (
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-8 text-center">
+            <h1 className="text-2xl font-bold text-red-600 dark:text-red-400 mb-4">Payment Failed</h1>
+            <p className="text-red-600 dark:text-red-300 mb-6">{error}</p>
+            <button
+              onClick={() => navigate('/events')}
+              className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded"
+            >
+              Back to Events
+            </button>
+          </div>
+        ) : ticket && event ? (
+          <div className="space-y-8">
+            {/* Success Message */}
+            <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg shadow-lg p-8 text-white text-center">
+              <div className="mb-4 text-6xl">✅</div>
+              <h1 className="text-4xl font-bold mb-2">Payment Successful!</h1>
+              <p className="text-lg opacity-90">Your ticket has been generated and sent to your email</p>
+            </div>
+
+            {/* Event Details Card */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
+              <div 
+                className="h-48 bg-gradient-to-r from-indigo-600 to-purple-600 relative"
+                style={{
+                  backgroundImage: event.image ? `url(${event.image})` : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center'
+                }}
+              >
+                <div className="absolute inset-0 bg-black/30 flex items-end p-6">
+                  <h2 className="text-3xl font-bold text-white">{event.title}</h2>
+                </div>
+              </div>
+
+              <div className="p-8">
+                {/* Event Info Grid */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+                  <div>
+                    <p className="text-gray-500 dark:text-gray-400 text-sm font-semibold mb-1">DATE</p>
+                    <p className="text-lg font-bold text-gray-900 dark:text-white">
+                      {format(new Date(event.eventDate), 'dd MMM yyyy')}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500 dark:text-gray-400 text-sm font-semibold mb-1">TIME</p>
+                    <p className="text-lg font-bold text-gray-900 dark:text-white">
+                      {format(new Date(event.eventDate), 'HH:mm')}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500 dark:text-gray-400 text-sm font-semibold mb-1">LOCATION</p>
+                    <p className="text-lg font-bold text-gray-900 dark:text-white">{event.location}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500 dark:text-gray-400 text-sm font-semibold mb-1">PRICE</p>
+                    <p className="text-lg font-bold text-green-600 dark:text-green-400">₦{event.ticketPrice?.toLocaleString()}</p>
+                  </div>
+                </div>
+
+                <div className="border-t border-gray-200 dark:border-gray-700 pt-6 mb-6">
+                  <p className="text-gray-700 dark:text-gray-300 leading-relaxed">{event.description}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Ticket Display */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl p-8">
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-8 text-center">Your Event Ticket</h3>
+              
+              {/* Ticket Card */}
+              <div className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-gray-700 dark:to-gray-600 rounded-xl p-8 border-2 border-dashed border-indigo-300 dark:border-indigo-500">
+                <div className="flex flex-col md:flex-row gap-8">
+                  {/* QR Code */}
+                  <div className="flex flex-col items-center justify-center md:w-1/3">
+                    <div className="bg-white p-4 rounded-lg shadow-lg">
+                      <QRCode 
+                        value={ticket.ticketNumber || 'ticket'} 
+                        size={200}
+                        level="H"
+                        includeMargin={true}
+                      />
+                    </div>
+                    <p className="text-sm text-gray-600 dark:text-gray-300 mt-4 text-center">
+                      Scan for entry
+                    </p>
+                  </div>
+
+                  {/* Ticket Details */}
+                  <div className="md:w-2/3 space-y-6">
+                    {/* Header */}
+                    <div className="border-b-2 border-indigo-300 dark:border-indigo-500 pb-6">
+                      <h4 className="text-2xl font-bold text-gray-900 dark:text-white">{event.title}</h4>
+                      <p className="text-indigo-600 dark:text-indigo-400 font-semibold mt-2">Event Ticket</p>
+                    </div>
+
+                    {/* Ticket Info */}
+                    <div className="grid grid-cols-2 gap-6">
+                      <div>
+                        <p className="text-gray-500 dark:text-gray-400 text-xs font-semibold uppercase mb-1">Ticket Number</p>
+                        <p className="font-mono font-bold text-gray-900 dark:text-white text-lg break-all">{ticket.ticketNumber}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500 dark:text-gray-400 text-xs font-semibold uppercase mb-1">Ticket Type</p>
+                        <p className="font-bold text-gray-900 dark:text-white">{ticket.ticketType || 'General Admission'}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500 dark:text-gray-400 text-xs font-semibold uppercase mb-1">Date</p>
+                        <p className="font-bold text-gray-900 dark:text-white">{format(new Date(event.eventDate), 'MMM dd, yyyy')}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500 dark:text-gray-400 text-xs font-semibold uppercase mb-1">Time</p>
+                        <p className="font-bold text-gray-900 dark:text-white">{format(new Date(event.eventDate), 'HH:mm aaa')}</p>
+                      </div>
+                      <div className="col-span-2">
+                        <p className="text-gray-500 dark:text-gray-400 text-xs font-semibold uppercase mb-1">Venue</p>
+                        <p className="font-bold text-gray-900 dark:text-white">{event.location}</p>
+                      </div>
+                    </div>
+
+                    {/* Footer */}
+                    <div className="border-t-2 border-indigo-300 dark:border-indigo-500 pt-6">
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        ✓ This ticket is valid for one person only. Please bring a valid ID to the event.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-8 p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg border border-blue-200 dark:border-blue-800">
+                <p className="text-blue-800 dark:text-blue-200 text-sm">
+                  📧 A copy of your ticket has been sent to your email. Keep it safe for entry to the event.
+                </p>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <button
+                onClick={() => navigate('/my-tickets')}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-lg transition"
+              >
+                View My Tickets
+              </button>
+              <button
+                onClick={() => navigate('/events')}
+                className="bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-white font-bold py-3 px-8 rounded-lg transition"
+              >
+                Browse More Events
+              </button>
+            </div>
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
+};
+
+export default PaymentSuccess;
