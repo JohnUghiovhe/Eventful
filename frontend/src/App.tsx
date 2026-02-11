@@ -49,6 +49,7 @@ const App: React.FC = () => {
                   <Route path="/register" element={<Register />} />
                   <Route path="/events" element={<Events />} />
                   <Route path="/events/:id" element={<EventDetails />} />
+                  <Route path="/payment/success" element={<PaymentSuccess />} />
 
                   {/* Protected Routes */}
                   <Route
@@ -120,14 +121,6 @@ const App: React.FC = () => {
                     element={
                       <PrivateRoute requireEventee>
                         <PaymentVerify />
-                      </PrivateRoute>
-                    }
-                  />
-                  <Route
-                    path="/payment/success"
-                    element={
-                      <PrivateRoute requireEventee>
-                        <PaymentSuccess />
                       </PrivateRoute>
                     }
                   />
