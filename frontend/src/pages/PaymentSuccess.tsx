@@ -63,29 +63,35 @@ const PaymentSuccess: React.FC = () => {
           return;
         }
 
-        // Verify payment with backend
-        console.log('Calling /payments/verify endpoint');
-        const verifyResponse = await api.post('/payments/verify', { reference });
-        
+        // Verify payment with backend (public endpoint for redirect flow)
+        console.log('Calling /payments/verify-public endpoint');
+        const verifyResponse = await api.post('/payments/verify-public', { reference });
+
         console.log('Payment verification response:', verifyResponse.data);
-        
+
         if (verifyResponse.data.success && verifyResponse.data.data) {
-          // Get the ticket details
-          const ticketId = verifyResponse.data.data.ticketId || verifyResponse.data.data.ticket?._id;
-          if (ticketId) {
-            const ticketResponse = await api.get(`/tickets/${ticketId}`);
-            if (ticketResponse.data.success) {
-              setTicket(ticketResponse.data.data);
-              
-              // Get event details
-              const eventId = ticketResponse.data.data.event;
+          const verifiedTicket = verifyResponse.data.data.ticket as Ticket | undefined;
+          const payment = verifyResponse.data.data.payment as any;
+
+          if (verifiedTicket) {
+            setTicket(verifiedTicket);
+          }
+
+          const paymentEvent = payment?.event;
+          if (paymentEvent && typeof paymentEvent === 'object') {
+            setEvent(paymentEvent as Event);
+          } else {
+            const eventId = paymentEvent || verifiedTicket?.event;
+            if (eventId) {
               const eventResponse = await api.get(`/events/${eventId}`);
               if (eventResponse.data.success) {
                 setEvent(eventResponse.data.data);
               }
             }
-          } else {
-            console.error('No ticketId in verification response:', verifyResponse.data);
+          }
+
+          if (!verifiedTicket) {
+            console.error('Ticket missing in verification response:', verifyResponse.data);
             setError('Ticket information not found');
           }
         } else {

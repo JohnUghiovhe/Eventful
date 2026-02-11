@@ -35,6 +35,18 @@ router.post(
 );
 
 /**
+ * @route   POST /api/payments/verify-public
+ * @desc    Verify payment and issue ticket (redirect callback)
+ * @access  Public
+ */
+router.post(
+  '/verify-public',
+  apiLimiter,
+  validatePaymentVerification,
+  PaymentController.verifyPayment
+);
+
+/**
  * @route   GET /api/payments
  * @desc    Get user's payment history
  * @access  Private (Eventee only)
