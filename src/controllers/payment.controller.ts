@@ -217,8 +217,10 @@ export class PaymentController {
         reminder: payment.metadata.reminder || event.defaultReminder
       });
 
-      // Populate ticket with event and user data
-      ticket = await ticket.populate('event').populate('user', 'firstName lastName email');
+      // Refetch ticket with populated event and user data
+      ticket = await Ticket.findById(ticket._id)
+        .populate('event')
+        .populate('user', 'firstName lastName email');
 
       // Update payment with ticket reference
       payment.ticket = ticket._id;
