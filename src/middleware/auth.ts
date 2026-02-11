@@ -29,9 +29,19 @@ export const authorize = (...roles: UserRole[]) => {
     }
 
     if (!roles.includes(req.user.role)) {
+      const requiredRoles = roles.join(' or ');
+      const errorMessage = 
+        roles.includes(UserRole.EVENTEE) 
+          ? 'You must be an Eventee to purchase tickets. Please register as an Eventee (Attend Events) account.'
+          : roles.includes(UserRole.CREATOR)
+          ? 'You must be a Creator to access this feature. Please register as a Creator (Create Events) account.'
+          : `Insufficient permissions. Required role(s): ${requiredRoles}`;
+      
       res.status(403).json({
         success: false,
-        message: 'Forbidden: Insufficient permissions'
+        message: errorMessage,
+        requiredRoles,
+        currentRole: req.user.role
       });
       return;
     }

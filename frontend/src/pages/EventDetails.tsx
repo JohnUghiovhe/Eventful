@@ -32,7 +32,21 @@ const EventDetails: React.FC = () => {
         window.location.href = data.paymentUrl;
       },
       onError: (error: any) => {
-        toast.error(error.response?.data?.message || 'Purchase failed');
+        const status = error.response?.status;
+        const data = error.response?.data;
+        
+        if (status === 403) {
+          // Permission/role error
+          toast.error(
+            data?.message || 'You cannot purchase tickets. Please ensure your account is registered as an Eventee.'
+          );
+        } else if (status === 401) {
+          // Authentication error
+          toast.info('Please login to purchase tickets');
+          navigate('/login');
+        } else {
+          toast.error(data?.message || 'Purchase failed');
+        }
       },
     }
   );
