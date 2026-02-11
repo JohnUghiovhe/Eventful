@@ -159,7 +159,10 @@ export class PaymentController {
 
       // Check if already verified
       if (payment.status === PaymentStatus.SUCCESS) {
-        const ticket = await Ticket.findOne({ payment: payment._id.toString() } as any);
+        const ticket = await Ticket.findOne({ payment: payment._id.toString() } as any)
+          .populate('event')
+          .populate('user', 'firstName lastName email');
+        Logger.info(`Payment already verified: ${reference}`, { ticketId: ticket?._id });
         res.status(200).json({
           success: true,
           message: 'Payment already verified',
@@ -202,7 +205,7 @@ export class PaymentController {
       const qrCode = await QRCodeService.generateQRCode(qrCodeData);
 
       // Create ticket
-      const ticket: any = await Ticket.create({
+      let ticket: any = await Ticket.create({
         ticketNumber: payment.metadata.ticketNumber,
         event: event._id,
         user: payment.user,
@@ -213,6 +216,9 @@ export class PaymentController {
         payment: payment._id.toString(),
         reminder: payment.metadata.reminder || event.defaultReminder
       });
+
+      // Populate ticket with event and user data
+      ticket = await ticket.populate('event').populate('user', 'firstName lastName email');
 
       // Update payment with ticket reference
       payment.ticket = ticket._id;
@@ -243,6 +249,7 @@ export class PaymentController {
         qrCode
       });
 
+      Logger.info(`Payment verification successful: ${reference}`, { ticketId: ticket._id });
       res.status(200).json({
         success: true,
         message: 'Payment verified and ticket issued',
@@ -253,10 +260,55 @@ export class PaymentController {
       });
     } catch (error: any) {
       Logger.error('Verify payment error:', error);
+      console.error('Verify payment error details:', {
+        message: error.message,
+        stack: error.stack,
+        reference: req.body.reference
+      });
       res.status(500).json({
         success: false,
-        message: 'Failed to verify payment',
-        error: error.message
+        message: error.message || 'Failed to verify payment',
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  }
+
+  /**
+   * Get payment status (polling endpoint)
+   */
+  static async getPaymentStatus(req: AuthRequest, res: Response): Promise<void> {
+    try {
+      const { reference } = req.params;
+
+      const payment = await Payment.findOne({ reference }).populate('event');
+      if (!payment) {
+        res.status(404).json({
+          success: false,
+          message: 'Payment not found'
+        });
+        return;
+      }
+
+      let ticket = null;
+      if (payment.status === PaymentStatus.SUCCESS) {
+        ticket = await Ticket.findOne({ payment: payment._id.toString() } as any)
+          .populate('event')
+          .populate('user', 'firstName lastName email');
+      }
+
+      res.status(200).json({
+        success: true,
+        data: {
+          payment,
+          ticket,
+          status: payment.status
+        }
+      });
+    } catch (error: any) {
+      Logger.error('Get payment status error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to get payment status'
       });
     }
   }
