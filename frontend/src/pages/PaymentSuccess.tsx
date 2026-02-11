@@ -100,7 +100,9 @@ const PaymentSuccess: React.FC = () => {
         }
       } catch (err: any) {
         console.error('Payment verification error:', err);
-        setError(err.response?.data?.message || err.message || 'Failed to verify payment');
+        console.error('Error response:', err.response?.data);
+        const errorMsg = err.response?.data?.message || err.message || err.response?.data?.error || 'Failed to verify payment';
+        setError(errorMsg);
       } finally {
         setLoading(false);
       }

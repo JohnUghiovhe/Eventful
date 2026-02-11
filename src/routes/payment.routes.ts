@@ -47,6 +47,13 @@ router.post(
 );
 
 /**
+ * @route   GET /api/payments/status/:reference
+ * @desc    Get payment status (for polling)
+ * @access  Public
+ */
+router.get('/status/:reference', apiLimiter, PaymentController.getPaymentStatus);
+
+/**
  * @route   GET /api/payments
  * @desc    Get user's payment history
  * @access  Private (Eventee only)
