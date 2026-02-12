@@ -42,6 +42,8 @@ const CreateEvent: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const isEditing = !!id;
   const [showTimeWarning, setShowTimeWarning] = useState(false);
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
+  const [imageInput, setImageInput] = useState('');
 
   const { register, handleSubmit, formState: { errors }, reset } = useForm<EventFormData>();
 
@@ -60,6 +62,11 @@ const CreateEvent: React.FC = () => {
       const minutes = String(date.getMinutes()).padStart(2, '0');
       return `${year}-${month}-${day}T${hours}:${minutes}`;
     };
+    
+    // Load existing images
+    if (event.images && Array.isArray(event.images)) {
+      setImageUrls(event.images);
+    }
     
     reset({
       ...event,
@@ -93,6 +100,7 @@ const CreateEvent: React.FC = () => {
         totalTickets: data.totalTickets,
         defaultReminder: data.defaultReminder,
         tags: data.tags.split(',').map(tag => tag.trim()).filter(Boolean),
+        images: imageUrls, // Include images in payload
       };
 
       if (isEditing) {
@@ -110,6 +118,27 @@ const CreateEvent: React.FC = () => {
       },
     }
   );
+
+  const handleAddImage = () => {
+    if (imageInput.trim() && imageUrls.length < 5) {
+      // Basic URL validation
+      try {
+        new URL(imageInput.trim());
+        setImageUrls([...imageUrls, imageInput.trim()]);
+        setImageInput('');
+        toast.success('Image added successfully');
+      } catch {
+        toast.error('Please enter a valid URL');
+      }
+    } else if (imageUrls.length >= 5) {
+      toast.warning('Maximum 5 images allowed');
+    }
+  };
+
+  const handleRemoveImage = (index: number) => {
+    setImageUrls(imageUrls.filter((_, i) => i !== index));
+    toast.info('Image removed');
+  };
 
   const onSubmit = (data: EventFormData) => {
     // Check if time component is set (datetime-local includes time by default, but warn if it's midnight which might be unintentional)
@@ -303,6 +332,82 @@ const CreateEvent: React.FC = () => {
               placeholder="music, concert, live"
               className="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400"
             />
+          </div>
+
+          {/* Event Images Section */}
+          <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+            <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+              Event Images (up to 5)
+            </label>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+              Add image URLs to showcase your event. Use high-quality images from Imgur, Cloudinary, or your own hosting.
+            </p>
+            
+            <div className="flex gap-2 mb-4">
+              <input
+                type="url"
+                value={imageInput}
+                onChange={(e) => setImageInput(e.target.value)}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddImage();
+                  }
+                }}
+                placeholder="https://example.com/image.jpg"
+                className="flex-1 border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400"
+              />
+              <button
+                type="button"
+                onClick={handleAddImage}
+                disabled={imageUrls.length >= 5}
+                className="bg-indigo-600 dark:bg-indigo-500 text-white px-4 py-2 rounded-md hover:bg-indigo-700 dark:hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                Add Image
+              </button>
+            </div>
+
+            {/* Image Preview Grid */}
+            {imageUrls.length > 0 && (
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {imageUrls.map((url, index) => (
+                  <div key={index} className="relative group">
+                    <img
+                      src={url}
+                      alt={`Event preview ${index + 1}`}
+                      className="w-full h-32 object-cover rounded-lg border-2 border-gray-200 dark:border-gray-600"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = 'https://via.placeholder.com/300x200?text=Image+Not+Found';
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveImage(index)}
+                      className="absolute top-2 right-2 bg-red-600 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-700"
+                      title="Remove image"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                    <div className="absolute bottom-2 left-2 bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded">
+                      Image {index + 1}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {imageUrls.length === 0 && (
+              <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center">
+                <svg className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                  <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">No images added yet</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500">Add image URLs above to showcase your event</p>
+              </div>
+            )}
           </div>
 
           <div className="flex gap-4">
