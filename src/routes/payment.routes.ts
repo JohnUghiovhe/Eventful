@@ -23,15 +23,15 @@ const router = Router();
  *             type: object
  *             required:
  *               - eventId
- *               - quantity
+ *               - reminder
  *             properties:
  *               eventId:
  *                 type: string
  *                 example: 507f1f77bcf86cd799439011
- *               quantity:
- *                 type: number
- *                 minimum: 1
- *                 example: 2
+ *               reminder:
+ *                 type: string
+ *                 enum: [1_hour, 24_hours, 1_week]
+ *                 
  *     responses:
  *       200:
  *         description: Payment initialized successfully
