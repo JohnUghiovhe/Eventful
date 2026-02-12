@@ -29,6 +29,9 @@ const router = Router();
  *               - location
  *               - price
  *               - totalTickets
+ *               - images
+ *               - defaultReminder
+ *               - tags
  *             properties:
  *               title:
  *                 type: string
@@ -61,6 +64,15 @@ const router = Router();
  *                   type: string
  *                   format: uri
  *                 example: ["https://example.com/image1.jpg"]
+ *               defaultReminder:
+ *                 type: number
+ *                 minimum: 0
+ *                 example: 30
+ *               tags:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 example: ["technology", "conference"]
  *     responses:
  *       201:
  *         description: Event created successfully
