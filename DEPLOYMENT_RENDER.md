@@ -42,6 +42,9 @@ EMAIL_FROM=noreply@eventful.com
 
 # Frontend
 FRONTEND_URL=https://eventful-frontend.onrender.com
+
+# API Base URL (used by Swagger to pick the correct server)
+API_BASE_URL=https://eventful-api.onrender.com
 ```
 
 ### 1.2 Update Build Scripts
@@ -125,6 +128,7 @@ export default defineConfig({
      - `EMAIL_PASSWORD=your-app-password`
      - `EMAIL_FROM=noreply@eventful.com`
      - `FRONTEND_URL=https://eventful-frontend.onrender.com`
+   - `API_BASE_URL=https://eventful-api.onrender.com`
 
    **Important Notes:**
    - JWT_EXPIRY should use `JWT_EXPIRY` (not `JWT_EXPIRES_IN`)
