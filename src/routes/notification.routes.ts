@@ -11,7 +11,7 @@ const router = Router();
  *   post:
  *     summary: Create a new notification
  *     tags: [Notifications]
- *     description: Create a custom notification for the authenticated user
+ *     description: Create a custom notification for the authenticated user. Role: Authenticated
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -74,7 +74,7 @@ router.post(
  *   get:
  *     summary: Get user's notifications
  *     tags: [Notifications]
- *     description: Retrieve all notifications for the authenticated user with pagination
+ *     description: Retrieve all notifications for the authenticated user with pagination. Role: Authenticated
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -140,7 +140,7 @@ router.get(
  *   get:
  *     summary: Get count of unread notifications
  *     tags: [Notifications]
- *     description: Get the total number of unread notifications for the authenticated user
+ *     description: Get the total number of unread notifications for the authenticated user. Role: Authenticated
  *     security:
  *       - bearerAuth: []
  *     responses:
@@ -176,7 +176,7 @@ router.get(
  *   get:
  *     summary: Get a specific notification
  *     tags: [Notifications]
- *     description: Retrieve details of a specific notification by ID
+ *     description: Retrieve details of a specific notification by ID. Role: Authenticated
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -226,7 +226,7 @@ router.get(
  *   patch:
  *     summary: Mark notification as read
  *     tags: [Notifications]
- *     description: Mark a specific notification as read
+ *     description: Mark a specific notification as read. Role: Authenticated
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -266,7 +266,7 @@ router.patch(
  *   patch:
  *     summary: Mark all notifications as read
  *     tags: [Notifications]
- *     description: Mark all user's notifications as read
+ *     description: Mark all user's notifications as read. Role: Authenticated
  *     security:
  *       - bearerAuth: []
  *     responses:
@@ -297,7 +297,7 @@ router.patch(
  *   delete:
  *     summary: Delete a notification
  *     tags: [Notifications]
- *     description: Delete a specific notification
+ *     description: Delete a specific notification. Role: Authenticated
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -337,7 +337,7 @@ router.delete(
  *   delete:
  *     summary: Delete all notifications
  *     tags: [Notifications]
- *     description: Delete all notifications for the authenticated user
+ *     description: Delete all notifications for the authenticated user. Role: Authenticated
  *     security:
  *       - bearerAuth: []
  *     responses:
