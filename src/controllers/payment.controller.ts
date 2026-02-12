@@ -420,4 +420,183 @@ export class PaymentController {
       });
     }
   }
+
+  /**
+   * Initialize demo payment (for testing without Paystack)
+   */
+  static async initializeDemoPayment(req: AuthRequest, res: Response): Promise<void> {
+    try {
+      const { eventId, reminder } = req.body;
+
+      // Validate input
+      if (!eventId) {
+        res.status(400).json({
+          success: false,
+          message: 'Event ID is required'
+        });
+        return;
+      }
+
+      // Check authentication
+      if (!req.user || !req.user.id) {
+        res.status(401).json({
+          success: false,
+          message: 'Authentication required. Please login to purchase tickets.'
+        });
+        return;
+      }
+
+      // Get event details
+      const event = await Event.findById(eventId);
+      if (!event) {
+        res.status(404).json({
+          success: false,
+          message: 'Event not found. The event may have been removed.'
+        });
+        return;
+      }
+
+      // Check event status
+      if (event.status !== 'published') {
+        res.status(400).json({
+          success: false,
+          message: 'This event is not available for ticket purchase'
+        });
+        return;
+      }
+
+      // Check ticket availability
+      if (event.availableTickets <= 0) {
+        res.status(400).json({
+          success: false,
+          message: 'Sorry, no tickets are available for this event'
+        });
+        return;
+      }
+
+      // Get user details
+      const user = await User.findById(req.user.id);
+      if (!user) {
+        res.status(404).json({
+          success: false,
+          message: 'User account not found. Please try logging in again.'
+        });
+        return;
+      }
+
+      Logger.info(`Initializing DEMO payment for user ${user.email} for event ${event.title}`);
+
+      // Generate references
+      const reference = `DEMO-${generateReference()}`;
+      const ticketNumber = generateTicketNumber();
+
+      // Create payment record with SUCCESS status for demo
+      const payment: any = await Payment.create({
+        reference,
+        user: user._id.toString(),
+        event: event._id.toString(),
+        amount: event.ticketPrice,
+        currency: 'NGN',
+        status: PaymentStatus.SUCCESS,
+        paystackReference: reference,
+        metadata: {
+          ticketNumber,
+          reminder: reminder || event.defaultReminder,
+          isDemo: true
+        },
+        paystackResponse: {
+          status: true,
+          message: 'Demo payment - no actual transaction',
+          data: {
+            authorization_url: '#',
+            access_code: 'demo_access_code',
+            reference
+          }
+        }
+      });
+
+      Logger.info(`Demo payment record created with reference ${reference}`, { paymentId: payment._id });
+
+      // Generate QR code for ticket
+      const qrCodeData = {
+        ticketNumber,
+        eventId: event._id.toString(),
+        userId: user._id.toString(),
+        eventTitle: event.title,
+        eventDate: event.startDate
+      };
+      const qrCode = await QRCodeService.generateQRCode(qrCodeData);
+
+      // Create ticket immediately
+      const ticket: any = await Ticket.create({
+        ticketNumber,
+        event: event._id.toString(),
+        user: user._id.toString(),
+        qrCode,
+        qrCodeData: JSON.stringify(qrCodeData),
+        status: TicketStatus.PAID,
+        price: event.ticketPrice,
+        payment: payment._id.toString(),
+        reminder: reminder || event.defaultReminder
+      });
+
+      Logger.info(`Demo ticket created: ${ticketNumber}`, { ticketId: ticket._id });
+
+      // Update event tickets
+      if (event.availableTickets > 0) {
+        event.availableTickets -= 1;
+        await event.save();
+      }
+
+      // Create reminder
+      const reminderDate = calculateReminderDate(event.startDate, ticket.reminder);
+      await NotificationService.createReminder(
+        user._id.toString(),
+        event._id.toString(),
+        ticket._id.toString(),
+        reminderDate
+      );
+
+      // Send confirmation email
+      try {
+        await EmailService.sendTicketConfirmation(user.email, {
+          eventTitle: event.title,
+          ticketNumber: ticket.ticketNumber,
+          eventDate: event.startDate.toLocaleString(),
+          venue: event.venue,
+          qrCode
+        });
+      } catch (emailError) {
+        Logger.error('Failed to send demo confirmation email:', emailError);
+      }
+
+      res.status(200).json({
+        success: true,
+        message: 'Demo payment completed successfully! Ticket issued.',
+        data: {
+          payment: {
+            reference: payment.reference,
+            amount: payment.amount,
+            status: payment.status,
+            isDemo: true
+          },
+          ticket: {
+            ticketNumber: ticket.ticketNumber,
+            qrCode: ticket.qrCode,
+            status: ticket.status,
+            eventTitle: event.title,
+            eventDate: event.startDate,
+            venue: event.venue
+          }
+        }
+      });
+    } catch (error: any) {
+      Logger.error('Initialize demo payment error:', error);
+      res.status(500).json({
+        success: false,
+        message: error.message || 'Failed to initialize demo payment. Please try again.',
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  }
 }

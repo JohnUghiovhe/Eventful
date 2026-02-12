@@ -169,6 +169,7 @@ Authorization: Bearer <token>
 ### Payments
 
 #### Initialize Payment (Eventee only)
+**Role:** Eventee
 ```http
 POST /api/payments/initialize
 Authorization: Bearer <token>
@@ -193,7 +194,45 @@ Content-Type: application/json
 }
 ```
 
+#### Initialize Demo Payment (Testing only - Eventee)
+**Role:** Eventee (Testing only)
+```http
+POST /api/payments/demo-initialize
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "eventId": "event_id_here",
+  "reminder": "1_day"  // optional, defaults to event's default reminder
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Demo payment completed successfully! Ticket issued.",
+  "data": {
+    "payment": {
+      "reference": "DEMO-REF-XXX",
+      "amount": 5000,
+      "status": "success",
+      "isDemo": true
+    },
+    "ticket": {
+      "ticketNumber": "TKT-XXX-YYY",
+      "qrCode": "data:image/png;base64,...",
+      "status": "paid",
+      "eventTitle": "Event Title",
+      "eventDate": "2026-02-14T20:00:00Z",
+      "venue": "Event Venue"
+    }
+  }
+}
+```
+
 #### Verify Payment (Eventee only)
+**Role:** Eventee
 ```http
 POST /api/payments/verify
 Authorization: Bearer <token>
@@ -220,13 +259,58 @@ Content-Type: application/json
 }
 ```
 
+#### Verify Payment (Public Callback)
+**Role:** Public
+```http
+POST /api/payments/verify-public
+Content-Type: application/json
+
+{
+  "reference": "REF-XXX-YYY"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Payment verified successfully",
+  "data": {
+    "ticket": {
+      "ticketNumber": "TKT-XXX-YYY",
+      "qrCode": "data:image/png;base64,...",
+      "status": "paid"
+    }
+  }
+}
+```
+
+#### Get Payment Status (Public)
+**Role:** Public
+```http
+GET /api/payments/status/REF-XXX-YYY
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "status": "pending",
+    "payment": { ... }
+  }
+}
+```
+
 #### Get My Payments (Eventee only)
+**Role:** Eventee
 ```http
 GET /api/payments
 Authorization: Bearer <token>
 ```
 
 #### Get Event Payments (Creator only)
+**Role:** Creator
 ```http
 GET /api/payments/event/eventId
 Authorization: Bearer <token>
@@ -302,7 +386,7 @@ Authorization: Bearer <token>
 
 #### Mark Used Ticket (Creator only)
 ```http
-PATCH /api/tickets/:id/mark-used
+PATCH /api/tickets/id/mark-used
 Authorization: Bearer <token>
 ```
 
@@ -348,7 +432,7 @@ Authorization: Bearer <token>
 }
 ```
 
-#### Get Events Analytics (Creator only)
+#### Get All Events Analytics (Creator only)
 ```http
 GET /api/analytics/events
 Authorization: Bearer <token>
@@ -496,7 +580,7 @@ Authorization: Bearer <token>
 
 #### Get Notification by ID
 ```http
-GET /api/notifications/:id
+GET /api/notifications/id
 Authorization: Bearer <token>
 ```
 
@@ -577,23 +661,6 @@ Authorization: Bearer <token>
   "message": "All notifications deleted",
   "data": {
     "deletedCount": 25
-  }
-}
-```
-
-#### Clear Read Notifications
-```http
-DELETE /api/notifications/clear/read
-Authorization: Bearer <token>
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Read notifications cleared",
-  "data": {
-    "deletedCount": 15
   }
 }
 ```
