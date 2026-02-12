@@ -93,7 +93,8 @@ When you log in as a Creator, your dashboard gives you instant insights:
    
    **Visuals:**
    - **Upload Event Images**: Add up to 5 stunning images to showcase your event
-   - Paste image URLs (from Imgur, Cloudinary, or your own hosting)
+   - **Option 1 - URL**: Paste image URLs (from Imgur, Cloudinary, or your own hosting)
+   - **Option 2 - Local Upload**: Upload images directly from your device (max 2MB each)
    - Live preview of all added images
    - Remove any image with one click
    - First image becomes your event's cover photo
