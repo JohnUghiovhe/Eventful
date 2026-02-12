@@ -271,20 +271,21 @@ export class PaymentController {
         );
       }
 
-      // Send confirmation email only for new tickets
-      if (isNewTicket) {
-        try {
-          await EmailService.sendTicketConfirmation(user!.email, {
-            eventTitle: event.title,
-            ticketNumber: ticket.ticketNumber,
-            eventDate: event.startDate.toLocaleString(),
-            venue: event.venue,
-            qrCode
-          });
-        } catch (emailError) {
-          Logger.error('Failed to send confirmation email:', emailError);
-          // Don't fail the payment verification if email fails
-        }
+      // Send confirmation email asynchronously to avoid blocking the response
+      if (isNewTicket && user?.email) {
+        setImmediate(async () => {
+          try {
+            await EmailService.sendTicketConfirmation(user.email, {
+              eventTitle: event.title,
+              ticketNumber: ticket.ticketNumber,
+              eventDate: event.startDate.toLocaleString(),
+              venue: event.venue,
+              qrCode
+            });
+          } catch (emailError) {
+            Logger.error('Failed to send confirmation email:', emailError);
+          }
+        });
       }
 
       Logger.info(`Payment verification successful: ${reference}`, { ticketId: ticket._id });
@@ -557,17 +558,21 @@ export class PaymentController {
         reminderDate
       );
 
-      // Send confirmation email
-      try {
-        await EmailService.sendTicketConfirmation(user.email, {
-          eventTitle: event.title,
-          ticketNumber: ticket.ticketNumber,
-          eventDate: event.startDate.toLocaleString(),
-          venue: event.venue,
-          qrCode
+      // Send confirmation email asynchronously to avoid blocking the response
+      if (user?.email) {
+        setImmediate(async () => {
+          try {
+            await EmailService.sendTicketConfirmation(user.email, {
+              eventTitle: event.title,
+              ticketNumber: ticket.ticketNumber,
+              eventDate: event.startDate.toLocaleString(),
+              venue: event.venue,
+              qrCode
+            });
+          } catch (emailError) {
+            Logger.error('Failed to send demo confirmation email:', emailError);
+          }
         });
-      } catch (emailError) {
-        Logger.error('Failed to send demo confirmation email:', emailError);
       }
 
       res.status(200).json({
