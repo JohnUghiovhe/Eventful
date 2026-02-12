@@ -11,7 +11,7 @@ const router = Router();
  *   get:
  *     summary: Get creator's overall analytics
  *     tags: [Analytics]
- *     description: Retrieve comprehensive analytics across all events created by the authenticated Creator. Role: Creator
+ *     description: Retrieve comprehensive analytics across all events created by the authenticated Creator. Role - Creator
  *     security:
  *       - bearerAuth: []
  *     responses:
@@ -63,7 +63,7 @@ router.get(
  *   get:
  *     summary: Get analytics for all creator's events
  *     tags: [Analytics]
- *     description: Retrieve detailed analytics for each event created by the authenticated Creator. Role: Creator
+ *     description: Retrieve detailed analytics for each event created by the authenticated Creator. Role - Creator
  *     security:
  *       - bearerAuth: []
  *     responses:
@@ -110,7 +110,7 @@ router.get(
  *   get:
  *     summary: Get analytics for a specific event
  *     tags: [Analytics]
- *     description: Retrieve detailed analytics for a specific event (must be event owner). Role: Creator
+ *     description: Retrieve detailed analytics for a specific event (must be event owner). Role - Creator
  *     security:
  *       - bearerAuth: []
  *     parameters:

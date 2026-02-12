@@ -12,7 +12,7 @@ const router = Router();
  *   post:
  *     summary: Create a new event
  *     tags: [Events]
- *     description: Create a new event. Role: Creator
+ *     description: Create a new event. Role - Creator
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -99,7 +99,7 @@ router.post(
  *   get:
  *     summary: Get all published events
  *     tags: [Events]
- *     description: Retrieve all published events with optional filtering and pagination. Role: Authenticated (Creator or Eventee)
+ *     description: Retrieve all published events with optional filtering and pagination. Role - Authenticated (Creator or Eventee)
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -161,7 +161,7 @@ router.get('/', authenticate, apiLimiter, EventController.getAllEvents);
  *   get:
  *     summary: Get events created by current user
  *     tags: [Events]
- *     description: Retrieve all events created by the authenticated Creator. Role: Creator
+ *     description: Retrieve all events created by the authenticated Creator. Role - Creator
  *     security:
  *       - bearerAuth: []
  *     responses:
@@ -192,7 +192,7 @@ router.get('/my-events', authenticate, isCreator, apiLimiter, EventController.ge
  *   get:
  *     summary: Get event by ID
  *     tags: [Events]
- *     description: Retrieve detailed information about a specific event. Role: Authenticated (Creator or Eventee)
+ *     description: Retrieve detailed information about a specific event. Role - Authenticated (Creator or Eventee)
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -228,7 +228,7 @@ router.get('/:id', authenticate, apiLimiter, EventController.getEventById);
  *   get:
  *     summary: Get share links for an event
  *     tags: [Events]
- *     description: Generate social media share links for an event. Role: Authenticated (Creator or Eventee)
+ *     description: Generate social media share links for an event. Role - Authenticated (Creator or Eventee)
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -271,7 +271,7 @@ router.get('/:id/share', authenticate, apiLimiter, EventController.getShareLinks
  *   patch:
  *     summary: Update event status
  *     tags: [Events]
- *     description: Update event status (publish, cancel, complete). Role: Creator
+ *     description: Update event status (publish, cancel, complete). Role - Creator
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -326,7 +326,7 @@ router.patch(
  *   put:
  *     summary: Update an event
  *     tags: [Events]
- *     description: Update event details (must be event owner). Role: Creator
+ *     description: Update event details (must be event owner). Role - Creator
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -395,7 +395,7 @@ router.put(
  *   delete:
  *     summary: Delete an event
  *     tags: [Events]
- *     description: Delete an event (must be event owner). Role: Creator
+ *     description: Delete an event (must be event owner). Role - Creator
  *     security:
  *       - bearerAuth: []
  *     parameters:

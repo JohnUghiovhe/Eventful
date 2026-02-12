@@ -12,7 +12,7 @@ const router = Router();
  *   post:
  *     summary: Initialize payment for ticket purchase
  *     tags: [Payments]
- *     description: Initialize Paystack payment for purchasing event tickets. Role: Eventee
+ *     description: Initialize Paystack payment for purchasing event tickets. Role - Eventee
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -75,7 +75,7 @@ router.post(
  *   post:
  *     summary: Verify payment and issue ticket
  *     tags: [Payments]
- *     description: Verify Paystack payment and generate ticket with QR code. Role: Eventee
+ *     description: Verify Paystack payment and generate ticket with QR code. Role - Eventee
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -131,7 +131,7 @@ router.post(
  *   post:
  *     summary: Verify payment (public callback endpoint)
  *     tags: [Payments]
- *     description: Public endpoint for Paystack redirect callback - verifies payment and issues ticket. Role: Public
+ *     description: Public endpoint for Paystack redirect callback - verifies payment and issues ticket. Role - Public
  *     requestBody:
  *       required: true
  *       content:
@@ -179,7 +179,7 @@ router.post(
  *   get:
  *     summary: Get payment status
  *     tags: [Payments]
- *     description: Check the current status of a payment by reference (for polling). Role: Public
+ *     description: Check the current status of a payment by reference (for polling). Role - Public
  *     parameters:
  *       - in: path
  *         name: reference
@@ -219,7 +219,7 @@ router.get('/status/:reference', apiLimiter, PaymentController.getPaymentStatus)
  *   get:
  *     summary: Get user's payment history
  *     tags: [Payments]
- *     description: Retrieve all payments made by the authenticated Eventee. Role: Eventee
+ *     description: Retrieve all payments made by the authenticated Eventee. Role - Eventee
  *     security:
  *       - bearerAuth: []
  *     responses:
@@ -248,7 +248,7 @@ router.get('/', authenticate, isEventee, apiLimiter, PaymentController.getMyPaym
  *   get:
  *     summary: Get payments for an event
  *     tags: [Payments]
- *     description: Retrieve all payments for a specific event (must be event owner). Role: Creator
+ *     description: Retrieve all payments for a specific event (must be event owner). Role - Creator
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -296,7 +296,7 @@ router.get(
  *       Initialize a demo payment that completes immediately without Paystack interaction.
  *       This endpoint is for API testing purposes - it creates a payment and ticket without
  *       requiring actual payment processing. Perfect for Postman/Swagger testing.
- *       Role: Eventee (Testing only)
+ *       Role - Eventee (Testing only)
  *     security:
  *       - bearerAuth: []
  *     requestBody:

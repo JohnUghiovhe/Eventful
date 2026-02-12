@@ -12,7 +12,7 @@ const router = Router();
  *   get:
  *     summary: Get user's tickets
  *     tags: [Tickets]
- *     description: Retrieve all tickets purchased by the authenticated Eventee. Role: Eventee
+ *     description: Retrieve all tickets purchased by the authenticated Eventee. Role - Eventee
  *     security:
  *       - bearerAuth: []
  *     responses:
@@ -43,7 +43,7 @@ router.get('/', authenticate, isEventee, apiLimiter, TicketController.getMyTicke
  *   get:
  *     summary: Get ticket by ID
  *     tags: [Tickets]
- *     description: Retrieve detailed information about a specific ticket. Role: Eventee
+ *     description: Retrieve detailed information about a specific ticket. Role - Eventee
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -79,7 +79,7 @@ router.get('/:id', authenticate, isEventee, apiLimiter, TicketController.getTick
  *   get:
  *     summary: Verify ticket with QR code
  *     tags: [Tickets]
- *     description: Verify a ticket's authenticity using its ticket number. Role: Creator
+ *     description: Verify a ticket's authenticity using its ticket number. Role - Creator
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -128,7 +128,7 @@ router.get(
  *   post:
  *     summary: Scan/Mark ticket as used
  *     tags: [Tickets]
- *     description: Scan a ticket at event entry and mark it as used. Role: Creator
+ *     description: Scan a ticket at event entry and mark it as used. Role - Creator
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -176,7 +176,7 @@ router.post(
  *   post:
  *     summary: Verify ticket by ticket number and event ID
  *     tags: [Tickets]
- *     description: Verify a ticket belongs to a specific event. Role: Creator
+ *     description: Verify a ticket belongs to a specific event. Role - Creator
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -233,7 +233,7 @@ router.post(
  *   patch:
  *     summary: Mark ticket as used
  *     tags: [Tickets]
- *     description: Manually mark a ticket as used. Role: Creator
+ *     description: Manually mark a ticket as used. Role - Creator
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -278,7 +278,7 @@ router.patch(
  *   put:
  *     summary: Update ticket reminder
  *     tags: [Tickets]
- *     description: Set or update reminder preferences for a ticket. Role: Eventee
+ *     description: Set or update reminder preferences for a ticket. Role - Eventee
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -336,7 +336,7 @@ router.put(
  *   get:
  *     summary: Get attendees for an event
  *     tags: [Tickets]
- *     description: Retrieve list of all attendees who purchased tickets for an event. Role: Creator
+ *     description: Retrieve list of all attendees who purchased tickets for an event. Role - Creator
  *     security:
  *       - bearerAuth: []
  *     parameters:
