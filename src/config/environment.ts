@@ -33,6 +33,9 @@ export const config = {
   // Frontend
   FRONTEND_URL: process.env.FRONTEND_URL || 'http://localhost:3000',
 
+  // API Base URL (used for Swagger server selection)
+  API_BASE_URL: process.env.API_BASE_URL,
+
   // QR Code
   QR_CODE_SIZE: parseInt(process.env.QR_CODE_SIZE || '200', 10),
 

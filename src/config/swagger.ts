@@ -1,6 +1,33 @@
 import swaggerJsdoc from 'swagger-jsdoc';
 import { config } from './environment';
 
+const renderExternalUrl = process.env.RENDER_EXTERNAL_URL;
+const apiBaseUrl = config.API_BASE_URL || renderExternalUrl;
+const localBaseUrl = `http://localhost:${config.PORT || 5000}`;
+const effectiveBaseUrl = apiBaseUrl || (config.NODE_ENV === 'production'
+  ? 'https://eventful-api.onrender.com'
+  : localBaseUrl);
+
+const servers = [
+  {
+    url: effectiveBaseUrl,
+    description: config.NODE_ENV === 'production' ? 'Production Server' : 'Development Server'
+  }
+];
+
+if (config.NODE_ENV !== 'production') {
+  servers.push(
+    {
+      url: 'https://eventful-api.onrender.com',
+      description: 'Production Server'
+    },
+    {
+      url: localBaseUrl,
+      description: 'Local Development Server'
+    }
+  );
+}
+
 const options: swaggerJsdoc.Options = {
   definition: {
     openapi: '3.0.0',
@@ -17,22 +44,7 @@ const options: swaggerJsdoc.Options = {
         url: 'https://opensource.org/licenses/MIT'
       }
     },
-    servers: [
-      {
-        url: config.NODE_ENV === 'production' 
-          ? 'https://eventful-api.onrender.com'
-          : `http://localhost:${config.PORT || 5000}`,
-        description: config.NODE_ENV === 'production' ? 'Production Server' : 'Development Server'
-      },
-      {
-        url: 'https://eventful-api.onrender.com',
-        description: 'Production Server'
-      },
-      {
-        url: 'http://localhost:5000',
-        description: 'Local Development Server'
-      }
-    ],
+    servers,
     components: {
       securitySchemes: {
         bearerAuth: {

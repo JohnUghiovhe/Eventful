@@ -26,7 +26,7 @@ app.use(helmet());
 const corsOptions = {
   origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
     const allowedOrigins = [
-      'https://eventful-frontend.onrender.com',
+      'https://eventful-frontend-908q.onrender.com',
       'http://localhost:3000',
       'http://localhost:5000'
     ];
