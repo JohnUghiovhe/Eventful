@@ -374,6 +374,50 @@ After first deployment:
 - Enable "Less secure app access" if using Gmail
 - Check spam folder for test emails
 
+### Payment callback shows "Not Found" (404) page
+
+**Symptom**: After successful Paystack payment, user is redirected to a "Not Found" page. Email receipt is received but no ticket is displayed.
+
+**Root Cause**: This is an SPA (Single Page Application) routing issue. When Paystack redirects to `/payment/success?reference=xxx`, Render's static hosting tries to find a physical file at that path and returns 404 because it's a client-side route handled by React Router.
+
+**Solution 1: Configure Render Redirects (Recommended)**
+
+1. Go to **Render Dashboard** → Your Frontend Static Site
+2. Click **"Redirects/Rewrites"** tab
+3. Verify or add this rule:
+   - **Source**: `/*`
+   - **Destination**: `/index.html`
+   - **Action**: `Rewrite`
+4. Click **"Save"**
+5. Trigger a manual deploy: **"Manual Deploy"** → **"Clear build cache & deploy"**
+
+**Solution 2: Ensure _redirects file is deployed**
+
+1. Verify `frontend/public/_redirects` exists with this content:
+   ```
+   /* /index.html 200
+   ```
+
+2. Check if it's being copied to dist during build:
+   ```bash
+   cd frontend
+   npm run build
+   ls dist/_redirects  # or dir dist\_redirects on Windows
+   ```
+
+3. If missing from dist, update your Render **Build Command** to:
+   ```bash
+   cd frontend && npm install && npm run build && cp public/_redirects dist/_redirects
+   ```
+
+4. Redeploy and test
+
+**Verification**:
+- After fixing, try making a test payment
+- After Paystack redirect, you should see the payment success page immediately
+- No manual refresh should be needed
+- Ticket details should display with QR code
+
 ## Security Best Practices
 
 1. **Never commit `.env` files** - Use environment variables in Render
