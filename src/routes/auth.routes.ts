@@ -12,7 +12,7 @@ const router = Router();
  *   post:
  *     summary: Register a new user
  *     tags: [Authentication]
- *     description: Create a new user account. Role: Public (Creator or Eventee)
+ *     description: Create a new user account. Role - Public (Creator or Eventee)
  *     requestBody:
  *       required: true
  *       content:
@@ -82,7 +82,7 @@ router.post('/register', authLimiter, validateRegistration, AuthController.regis
  *   post:
  *     summary: Login user
  *     tags: [Authentication]
- *     description: Authenticate user and receive JWT token. Role: Public
+ *     description: Authenticate user and receive JWT token. Role - Public
  *     requestBody:
  *       required: true
  *       content:
@@ -138,7 +138,7 @@ router.post('/login', authLimiter, validateLogin, AuthController.login);
  *   get:
  *     summary: Get current user profile
  *     tags: [Authentication]
- *     description: Retrieve the authenticated user's profile information. Role: Authenticated (Creator or Eventee)
+ *     description: Retrieve the authenticated user's profile information. Role - Authenticated (Creator or Eventee)
  *     security:
  *       - bearerAuth: []
  *     responses:
@@ -169,7 +169,7 @@ router.get('/profile', authenticate, AuthController.getProfile);
  *   put:
  *     summary: Update user profile
  *     tags: [Authentication]
- *     description: Update the authenticated user's profile information. Role: Authenticated (Creator or Eventee)
+ *     description: Update the authenticated user's profile information. Role - Authenticated (Creator or Eventee)
  *     security:
  *       - bearerAuth: []
  *     requestBody:
