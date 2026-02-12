@@ -44,6 +44,7 @@ const CreateEvent: React.FC = () => {
   const [showTimeWarning, setShowTimeWarning] = useState(false);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [imageInput, setImageInput] = useState('');
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   const { register, handleSubmit, formState: { errors }, reset } = useForm<EventFormData>();
 
@@ -138,6 +139,59 @@ const CreateEvent: React.FC = () => {
   const handleRemoveImage = (index: number) => {
     setImageUrls(imageUrls.filter((_, i) => i !== index));
     toast.info('Image removed');
+  };
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+
+    if (imageUrls.length + files.length > 5) {
+      toast.warning('Maximum 5 images allowed');
+      return;
+    }
+
+    setUploadingImage(true);
+    const newImageUrls: string[] = [];
+
+    try {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+          toast.error(`${file.name} is not an image file`);
+          continue;
+        }
+
+        // Validate file size (max 2MB)
+        if (file.size > 2 * 1024 * 1024) {
+          toast.error(`${file.name} is too large. Max size is 2MB`);
+          continue;
+        }
+
+        // Convert to base64
+        const base64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+
+        newImageUrls.push(base64);
+      }
+
+      if (newImageUrls.length > 0) {
+        setImageUrls([...imageUrls, ...newImageUrls]);
+        toast.success(`${newImageUrls.length} image(s) uploaded successfully`);
+      }
+    } catch (error) {
+      console.error('Error uploading images:', error);
+      toast.error('Failed to upload images');
+    } finally {
+      setUploadingImage(false);
+      // Reset input so the same file can be selected again
+      event.target.value = '';
+    }
   };
 
   const onSubmit = (data: EventFormData) => {
@@ -340,10 +394,11 @@ const CreateEvent: React.FC = () => {
               Event Images (up to 5)
             </label>
             <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
-              Add image URLs to showcase your event. Use high-quality images from Imgur, Cloudinary, or your own hosting.
+              Add images by URL or upload from your device. Max 5 images, 2MB each.
             </p>
             
-            <div className="flex gap-2 mb-4">
+            {/* URL Input */}
+            <div className="flex gap-2 mb-3">
               <input
                 type="url"
                 value={imageInput}
@@ -361,10 +416,47 @@ const CreateEvent: React.FC = () => {
                 type="button"
                 onClick={handleAddImage}
                 disabled={imageUrls.length >= 5}
-                className="bg-indigo-600 dark:bg-indigo-500 text-white px-4 py-2 rounded-md hover:bg-indigo-700 dark:hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="bg-indigo-600 dark:bg-indigo-500 text-white px-4 py-2 rounded-md hover:bg-indigo-700 dark:hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
               >
-                Add Image
+                Add URL
               </button>
+            </div>
+
+            {/* File Upload */}
+            <div className="mb-4">
+              <label className="flex items-center justify-center w-full border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-md px-4 py-3 cursor-pointer hover:border-indigo-500 dark:hover:border-indigo-400 transition-colors bg-white dark:bg-gray-800">
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleFileUpload}
+                  disabled={imageUrls.length >= 5 || uploadingImage}
+                  className="hidden"
+                />
+                <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
+                  {uploadingImage ? (
+                    <>
+                      <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      <span className="text-sm font-medium">Uploading...</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                      </svg>
+                      <span className="text-sm font-medium">
+                        {imageUrls.length >= 5 ? 'Maximum images reached' : 'Upload from device'}
+                      </span>
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                        (Click to browse)
+                      </span>
+                    </>
+                  )}
+                </div>
+              </label>
             </div>
 
             {/* Image Preview Grid */}
