@@ -16,6 +16,7 @@ const PaymentSuccess: React.FC = () => {
   const [event, setEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [stallMessage, setStallMessage] = useState<string | null>(null);
   const verifyAttemptRef = React.useRef<string | null>(null);
 
   useEffect(() => {
@@ -29,7 +30,29 @@ const PaymentSuccess: React.FC = () => {
       verifyAttemptRef.current = reference;
     }
 
+    const withTimeout = async <T,>(promise: Promise<T>, timeoutMs: number): Promise<T> => {
+      return new Promise((resolve, reject) => {
+        const timeoutId = window.setTimeout(() => {
+          reject(new Error('VERIFICATION_TIMEOUT'));
+        }, timeoutMs);
+
+        promise
+          .then((value) => {
+            window.clearTimeout(timeoutId);
+            resolve(value);
+          })
+          .catch((err) => {
+            window.clearTimeout(timeoutId);
+            reject(err);
+          });
+      });
+    };
+
     const verifyPayment = async () => {
+      const stallTimer = window.setTimeout(() => {
+        setStallMessage('Verification is taking longer than usual. We are still checking your payment...');
+      }, 10000);
+
       try {
         if (!reference) {
           console.error('No payment reference in URL');
@@ -76,7 +99,15 @@ const PaymentSuccess: React.FC = () => {
 
         // Verify payment with backend (public endpoint for redirect flow)
         console.log('Calling /payments/verify-public endpoint');
-        const verifyResponse = await api.post('/payments/verify-public', { reference });
+        const requestVerify = () => withTimeout(api.post('/payments/verify-public', { reference }), 10000);
+        let verifyResponse = await requestVerify();
+
+        if (!verifyResponse?.data?.success) {
+          // Keep existing flow for non-success responses
+          console.warn('Verification returned non-success response, retrying once...');
+          await new Promise(resolve => setTimeout(resolve, 1500));
+          verifyResponse = await requestVerify();
+        }
 
         console.log('Payment verification response:', verifyResponse.data);
 
@@ -112,6 +143,11 @@ const PaymentSuccess: React.FC = () => {
       } catch (err: any) {
         console.error('Payment verification error:', err);
         console.error('Error response:', err.response?.data);
+
+        if (err?.message === 'VERIFICATION_TIMEOUT') {
+          setError('Verification is taking too long. Please refresh this page to view your ticket, or check your dashboard later.');
+          return;
+        }
         
         // Handle duplicate ticket creation (E11000 unique constraint error)
         const errorMessage = err.response?.data?.message || err.message || err.response?.data?.error || 'Failed to verify payment';
@@ -140,6 +176,7 @@ const PaymentSuccess: React.FC = () => {
         
         setError(errorMessage);
       } finally {
+        window.clearTimeout(stallTimer);
         setLoading(false);
       }
     };
@@ -147,7 +184,21 @@ const PaymentSuccess: React.FC = () => {
     verifyPayment();
   }, [reference, demo]);
 
-  if (loading) return <LoadingSpinner />;
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-green-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+        <Navbar />
+        <div className="max-w-2xl mx-auto px-4 py-12">
+          <LoadingSpinner />
+          {stallMessage && (
+            <div className="mt-6 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 text-center">
+              <p className="text-yellow-800 dark:text-yellow-200 text-sm">{stallMessage}</p>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-green-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
