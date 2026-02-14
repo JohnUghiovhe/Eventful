@@ -7,7 +7,7 @@ interface ShareButtonProps {
   eventTitle: string;
 }
 
-const ShareButton: React.FC<ShareButtonProps> = ({ eventId, eventTitle }) => {
+const ShareButton: React.FC<ShareButtonProps> = ({ eventId }) => {
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 

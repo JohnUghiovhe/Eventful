@@ -1,5 +1,4 @@
 import React from 'react';
-import { useTheme } from '../contexts/ThemeContext';
 
 const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
