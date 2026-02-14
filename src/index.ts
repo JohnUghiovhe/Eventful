@@ -50,8 +50,9 @@ app.use(cors(corsOptions));
 // Preflight requests handler
 app.options('*', cors(corsOptions));
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Increase request body size limit to handle base64 images
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Passport middleware
 app.use(passport.initialize());
