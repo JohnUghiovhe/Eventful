@@ -6,6 +6,7 @@ import { format } from 'date-fns';
 import api from '../services/api';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import PageHeader from '../components/PageHeader';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 const MyEvents: React.FC = () => {
@@ -53,16 +54,20 @@ const MyEvents: React.FC = () => {
     <div className="flex flex-col min-h-screen">
       <Navbar />
       <div className="flex-1">
+        <PageHeader
+          title="My Events"
+          subtitle="Manage, publish, and track performance for every event you create."
+          badge="Creator"
+          actions={
+            <Link
+              to="/events/create"
+              className="dash-button dash-button--light"
+            >
+              Create New Event
+            </Link>
+          }
+        />
         <div className="max-w-6xl mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold">My Events</h1>
-          <Link
-            to="/events/create"
-            className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700"
-          >
-            Create New Event
-          </Link>
-        </div>
 
         {!events || events.length === 0 ? (
           <div className="text-center py-12">

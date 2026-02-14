@@ -4,6 +4,9 @@ import { useMutation, useQueryClient } from 'react-query';
 import { toast } from 'react-toastify';
 import api from '../services/api';
 import LoadingSpinner from '../components/LoadingSpinner';
+import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
+import PageHeader from '../components/PageHeader';
 
 const PaymentVerify: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -54,12 +57,21 @@ const PaymentVerify: React.FC = () => {
   }, [reference, demo]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-cream-light dark:bg-gray-900">
-      <div className="text-center">
-        <LoadingSpinner />
-        <h2 className="mt-4 text-xl font-semibold text-gray-900 dark:text-white">Verifying Payment...</h2>
-        <p className="text-gray-600 dark:text-gray-400 mt-2">Please wait while we confirm your payment</p>
+    <div className="min-h-screen bg-cream-light dark:bg-gray-900 flex flex-col">
+      <Navbar />
+      <div className="flex-1">
+        <PageHeader
+          title="Verifying Payment"
+          subtitle="Hang tight while we confirm your transaction."
+          badge="Payments"
+        />
+        <div className="max-w-3xl mx-auto px-4 py-16 text-center">
+          <LoadingSpinner />
+          <h2 className="mt-4 text-xl font-semibold text-gray-900 dark:text-white">Verifying Payment...</h2>
+          <p className="text-gray-600 dark:text-gray-400 mt-2">Please wait while we confirm your payment</p>
+        </div>
       </div>
+      <Footer />
     </div>
   );
 };

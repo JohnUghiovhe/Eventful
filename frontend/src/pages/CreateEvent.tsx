@@ -5,6 +5,8 @@ import { useMutation, useQuery } from 'react-query';
 import { toast } from 'react-toastify';
 import api from '../services/api';
 import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
+import PageHeader from '../components/PageHeader';
 
 const NIGERIAN_STATES = [
   'Abia', 'Adamawa', 'Akwa Ibom', 'Anambra', 'Bauchi', 'Bayelsa', 'Benue', 'Borno',
@@ -218,12 +220,15 @@ const CreateEvent: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-cream-light dark:bg-gray-900">
+    <div className="min-h-screen bg-cream-light dark:bg-gray-900 flex flex-col">
       <Navbar />
-      <div className="max-w-2xl mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-6 text-gray-900 dark:text-white">
-          {isEditing ? 'Edit Event' : 'Create New Event'}
-        </h1>
+      <div className="flex-1">
+        <PageHeader
+          title={isEditing ? 'Edit Event' : 'Create New Event'}
+          subtitle="Set the vibe, configure tickets, and publish when you're ready."
+          badge={isEditing ? 'Edit' : 'Creator'}
+        />
+        <div className="max-w-2xl mx-auto px-4 py-8">
         
         {showTimeWarning && (
           <div className="mb-4 p-4 bg-yellow-100 dark:bg-yellow-900 border border-yellow-400 dark:border-yellow-600 rounded-md">
@@ -519,7 +524,9 @@ const CreateEvent: React.FC = () => {
             </button>
           </div>
         </form>
+        </div>
       </div>
+      <Footer />
     </div>
   );
 };
