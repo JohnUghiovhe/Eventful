@@ -6,6 +6,7 @@ import Footer from '../components/Footer';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { useAuth } from '../contexts/AuthContext';
 import { authService } from '../services/auth.service';
+import { User } from '../types';
 
 const Profile: React.FC = () => {
   const { user, updateUser } = useAuth();
@@ -16,7 +17,6 @@ const Profile: React.FC = () => {
     phoneNumber: user?.phoneNumber || '',
     profileImage: user?.profileImage || '',
   });
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>(user?.profileImage || '');
 
   const { data: profile, isLoading } = useQuery(['profile'], async () => {
@@ -32,8 +32,10 @@ const Profile: React.FC = () => {
       return response.data;
     },
     {
-      onSuccess: (data) => {
-        updateUser(data);
+      onSuccess: (data: User | undefined) => {
+        if (data) {
+          updateUser(data);
+        }
         setIsEditing(false);
         toast.success('Profile updated successfully!');
       },
@@ -55,7 +57,6 @@ const Profile: React.FC = () => {
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setSelectedFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
         setPreviewUrl(reader.result as string);
@@ -81,7 +82,6 @@ const Profile: React.FC = () => {
       profileImage: user?.profileImage || '',
     });
     setPreviewUrl(user?.profileImage || '');
-    setSelectedFile(null);
   };
 
   if (isLoading) return <LoadingSpinner />;

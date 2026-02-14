@@ -6,6 +6,7 @@ import Footer from '../components/Footer';
 import { useAuth } from '../contexts/AuthContext';
 
 const Dashboard: React.FC = () => {
+  // Dashboard page component
   const { user, isCreator } = useAuth();
   const [searchParams] = useSearchParams();
   const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
@@ -104,6 +105,7 @@ const Dashboard: React.FC = () => {
         </div>
       </div>
       <Footer />
+    </div>
     </div>
   );
 };

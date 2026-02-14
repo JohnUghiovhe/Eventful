@@ -11,6 +11,7 @@ import Footer from '../components/Footer';
 import { useAuth } from '../contexts/AuthContext';
 
 const EventDetails: React.FC = () => {
+  // Event details page component
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -181,6 +182,7 @@ const EventDetails: React.FC = () => {
         )}
       </div>
       <Footer />
+    </div>
     </div>
   );
 };
