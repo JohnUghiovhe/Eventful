@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 import { useAuth } from '../contexts/AuthContext';
 
 const Dashboard: React.FC = () => {
@@ -20,9 +21,10 @@ const Dashboard: React.FC = () => {
   }, [searchParams]);
 
   return (
-    <div className="min-h-screen bg-cream-light dark:bg-gray-900">
+    <div className="flex flex-col min-h-screen bg-cream-light dark:bg-gray-900">
       <Navbar />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="flex-1">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">
           Welcome back, {user?.firstName}!
         </h1>
@@ -101,6 +103,7 @@ const Dashboard: React.FC = () => {
           </p>
         </div>
       </div>
+      <Footer />
     </div>
   );
 };

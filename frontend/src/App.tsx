@@ -15,6 +15,7 @@ import Register from './pages/Register';
 import Events from './pages/Events';
 import EventDetails from './pages/EventDetails';
 import Dashboard from './pages/Dashboard';
+import Profile from './pages/Profile';
 import CreateEvent from './pages/CreateEvent';
 import MyEvents from './pages/MyEvents';
 import MyTickets from './pages/MyTickets';
@@ -57,6 +58,14 @@ const App: React.FC = () => {
                     element={
                       <PrivateRoute>
                         <Dashboard />
+                      </PrivateRoute>
+                    }
+                  />
+                  <Route
+                    path="/profile"
+                    element={
+                      <PrivateRoute>
+                        <Profile />
                       </PrivateRoute>
                     }
                   />

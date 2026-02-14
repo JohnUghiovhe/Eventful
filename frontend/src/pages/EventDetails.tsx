@@ -6,6 +6,8 @@ import { format } from 'date-fns';
 import api from '../services/api';
 import Navbar from '../components/Navbar';
 import LoadingSpinner from '../components/LoadingSpinner';
+import ShareButton from '../components/ShareButton';
+import Footer from '../components/Footer';
 import { useAuth } from '../contexts/AuthContext';
 
 const EventDetails: React.FC = () => {
@@ -64,18 +66,22 @@ const EventDetails: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-cream-light dark:bg-gray-900">
+    <div className="min-h-screen bg-cream-light dark:bg-gray-900 flex flex-col">
       <Navbar />
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        {event.images?.length > 0 && (
-          <img
-            src={event.images[0]}
-            alt={event.title}
-            className="w-full h-96 object-cover rounded-lg mb-6"
-          />
-        )}
+      <div className="flex-1">
+        <div className="max-w-4xl mx-auto px-4 py-8">
+          {event.images?.length > 0 && (
+            <img
+              src={event.images[0]}
+              alt={event.title}
+              className="w-full h-96 object-cover rounded-lg mb-6"
+            />
+          )}
 
-        <h1 className="text-4xl font-bold mb-4 text-gray-900 dark:text-white">{event.title}</h1>
+          <div className="flex justify-between items-start mb-6 flex-col sm:flex-row gap-4">
+            <h1 className="text-4xl font-bold text-gray-900 dark:text-white flex-1">{event.title}</h1>
+            <ShareButton eventId={event._id} eventTitle={event.title} />
+          </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           <div>
@@ -174,6 +180,7 @@ const EventDetails: React.FC = () => {
           </div>
         )}
       </div>
+      <Footer />
     </div>
   );
 };
