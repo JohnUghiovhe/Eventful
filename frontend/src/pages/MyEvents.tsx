@@ -5,6 +5,7 @@ import { toast } from 'react-toastify';
 import { format } from 'date-fns';
 import api from '../services/api';
 import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 const MyEvents: React.FC = () => {
@@ -49,9 +50,10 @@ const MyEvents: React.FC = () => {
   if (isLoading) return <LoadingSpinner />;
 
   return (
-    <div>
+    <div className="flex flex-col min-h-screen">
       <Navbar />
-      <div className="max-w-6xl mx-auto px-4 py-8">
+      <div className="flex-1">
+        <div className="max-w-6xl mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">My Events</h1>
           <Link
@@ -156,7 +158,9 @@ const MyEvents: React.FC = () => {
             ))}
           </div>
         )}
+        </div>
       </div>
+      <Footer />
     </div>
   );
 };

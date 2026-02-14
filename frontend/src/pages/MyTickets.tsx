@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import api from '../services/api';
 import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 const MyTickets: React.FC = () => {
@@ -15,9 +16,10 @@ const MyTickets: React.FC = () => {
   if (isLoading) return <LoadingSpinner />;
 
   return (
-    <div className="min-h-screen bg-cream-light dark:bg-gray-900">
+    <div className="flex flex-col min-h-screen bg-cream-light dark:bg-gray-900">
       <Navbar />
-      <div className="max-w-6xl mx-auto px-4 py-8">
+      <div className="flex-1">
+        <div className="max-w-6xl mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold mb-6 text-gray-900 dark:text-white">My Tickets</h1>
 
         {!tickets || tickets.length === 0 ? (
@@ -72,7 +74,9 @@ const MyTickets: React.FC = () => {
             })}
           </div>
         )}
+        </div>
       </div>
+      <Footer />
     </div>
   );
 };
