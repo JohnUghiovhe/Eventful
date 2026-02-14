@@ -15,7 +15,7 @@ const Navbar: React.FC = () => {
           {/* Logo */}
           <div className="flex items-center">
             <Link to="/" className="text-amber-400 dark:text-indigo-400 text-2xl font-bold flex items-center">
-              🎉 Eventful
+               Eventful
             </Link>
           </div>
 

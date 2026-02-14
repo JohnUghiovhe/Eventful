@@ -57,13 +57,69 @@ const Profile: React.FC = () => {
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreviewUrl(reader.result as string);
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        toast.error('Please select an image file');
+        return;
+      }
+
+      // Validate file size (max 1mb before compression)
+      const maxSize = 1024 * 1024; // 1MB
+      if (file.size > maxSize) {
+        toast.error('Image size should be less than 1MB. Please compress your image.');
+        return;
+      }
+
+      // Create image element to compress
+      const img = new Image();
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+
+      img.onload = () => {
+        // Set canvas size to reduce dimensions
+        let width = img.width;
+        let height = img.height;
+
+        // Scale down if image is too large
+        const maxDimension = 800;
+        if (width > maxDimension || height > maxDimension) {
+          const ratio = Math.min(maxDimension / width, maxDimension / height);
+          width = Math.round(width * ratio);
+          height = Math.round(height * ratio);
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        // Draw and compress image
+        ctx?.drawImage(img, 0, 0, width, height);
+
+        // Convert to compressed base64 (JPEG quality 0.8)
+        const compressedImage = canvas.toDataURL('image/jpeg', 0.8);
+
+        // Check final size
+        const compressedSize = (compressedImage.length * 3) / 4; // Approximate base64 size
+        if (compressedSize > maxSize) {
+          toast.error('Compressed image is still too large. Please use a smaller image.');
+          return;
+        }
+
+        setPreviewUrl(compressedImage);
         setProfileData((prev) => ({
           ...prev,
-          profileImage: reader.result as string,
+          profileImage: compressedImage,
         }));
+        toast.success('Image compressed and ready to upload');
+      };
+
+      img.onerror = () => {
+        toast.error('Failed to process image. Please try another file.');
+      };
+
+      // Read file as data URL for image element
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        img.src = event.target?.result as string;
       };
       reader.readAsDataURL(file);
     }
@@ -119,17 +175,22 @@ const Profile: React.FC = () => {
                   )}
                 </div>
                 {isEditing && (
-                  <label className="cursor-pointer">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleFileSelect}
-                      className="hidden"
-                    />
-                    <span className="inline-block bg-indigo-600 dark:bg-indigo-500 text-white px-4 py-2 rounded-md hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors text-sm">
-                      Change Photo
-                    </span>
-                  </label>
+                  <div className="flex flex-col items-center">
+                    <label className="cursor-pointer mb-2">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileSelect}
+                        className="hidden"
+                      />
+                      <span className="inline-block bg-indigo-600 dark:bg-indigo-500 text-white px-4 py-2 rounded-md hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors text-sm">
+                        Change Photo
+                      </span>
+                    </label>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
+                      Max size: 500KB | Auto-compressed to 800x800px
+                    </p>
+                  </div>
                 )}
               </div>
 
