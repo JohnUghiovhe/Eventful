@@ -4,6 +4,8 @@ import { toast } from 'react-toastify';
 import { format } from 'date-fns';
 import api from '../services/api';
 import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
+import PageHeader from '../components/PageHeader';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 interface VerifiedTicket {
@@ -94,10 +96,15 @@ const VerifyTickets: React.FC = () => {
   if (eventsLoading) return <LoadingSpinner />;
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900">
+    <div className="min-h-screen bg-cream-light dark:bg-gray-900 flex flex-col">
       <Navbar />
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-6 text-gray-900 dark:text-white">Verify Tickets</h1>
+      <div className="flex-1">
+        <PageHeader
+          title="Verify Tickets"
+          subtitle="Scan, validate, and mark tickets in real time for a smooth entry flow."
+          badge="Creator"
+        />
+        <div className="max-w-6xl mx-auto px-4 py-8">
 
         {!events || events.length === 0 ? (
           <div className="text-center py-12">
@@ -240,7 +247,9 @@ const VerifyTickets: React.FC = () => {
             </div>
           </div>
         )}
+        </div>
       </div>
+      <Footer />
     </div>
   );
 };

@@ -5,6 +5,8 @@ import QRCode from 'react-qr-code';
 import api from '../services/api';
 import Navbar from '../components/Navbar';
 import LoadingSpinner from '../components/LoadingSpinner';
+import Footer from '../components/Footer';
+import PageHeader from '../components/PageHeader';
 import { Ticket, Event } from '../types';
 
 const PaymentSuccess: React.FC = () => {
@@ -186,25 +188,38 @@ const PaymentSuccess: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-green-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-green-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex flex-col">
         <Navbar />
-        <div className="max-w-2xl mx-auto px-4 py-12">
-          <LoadingSpinner />
-          {stallMessage && (
-            <div className="mt-6 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 text-center">
-              <p className="text-yellow-800 dark:text-yellow-200 text-sm">{stallMessage}</p>
-            </div>
-          )}
+        <div className="flex-1">
+          <PageHeader
+            title="Payment Status"
+            subtitle="We are verifying your transaction and preparing your ticket."
+            badge="Payments"
+          />
+          <div className="max-w-2xl mx-auto px-4 py-12">
+            <LoadingSpinner />
+            {stallMessage && (
+              <div className="mt-6 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 text-center">
+                <p className="text-yellow-800 dark:text-yellow-200 text-sm">{stallMessage}</p>
+              </div>
+            )}
+          </div>
         </div>
+        <Footer />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-green-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-green-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex flex-col">
       <Navbar />
-      
-      <div className="max-w-4xl mx-auto px-4 py-12">
+      <div className="flex-1">
+        <PageHeader
+          title="Payment Status"
+          subtitle="Your ticket is ready. Save the QR code and check your email for confirmation."
+          badge="Payments"
+        />
+        <div className="max-w-4xl mx-auto px-4 py-12">
         {error ? (
           <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-8 text-center">
             <h1 className="text-2xl font-bold text-red-600 dark:text-red-400 mb-4">Payment Failed</h1>
@@ -362,7 +377,9 @@ const PaymentSuccess: React.FC = () => {
             </div>
           </div>
         ) : null}
+        </div>
       </div>
+      <Footer />
     </div>
   );
 };
