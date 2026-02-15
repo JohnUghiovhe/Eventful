@@ -50,7 +50,7 @@ const ticketSchema = new Schema<ITicket>(
     payment: {
       type: String,
       ref: 'Payment',
-      required: true
+      required: false
     }
   },
   {

@@ -42,7 +42,7 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
             </p>
             <p className="flex items-center">
               <span className="mr-2">💰</span>
-              ₦{event.ticketPrice.toLocaleString()}
+              {event.ticketPrice === 0 ? 'FREE' : `₦${event.ticketPrice.toLocaleString()}`}
             </p>
           </div>
           {event.tags && event.tags.length > 0 && (

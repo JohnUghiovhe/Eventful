@@ -5,6 +5,8 @@ import { toast } from 'react-toastify';
 import { format } from 'date-fns';
 import api from '../services/api';
 import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
+import PageHeader from '../components/PageHeader';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 const TicketDetails: React.FC = () => {
@@ -37,11 +39,16 @@ const TicketDetails: React.FC = () => {
   const event = ticket.event;
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900">
+    <div className="min-h-screen bg-cream-light dark:bg-gray-900 flex flex-col">
       <Navbar />
-      <div className="max-w-2xl mx-auto px-4 py-8">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-          <h1 className="text-3xl font-bold mb-6 text-gray-900 dark:text-white">Ticket Details</h1>
+      <div className="flex-1">
+        <PageHeader
+          title="Ticket Details"
+          subtitle="Access your QR pass and manage reminders in one place."
+          badge="Eventee"
+        />
+        <div className="max-w-2xl mx-auto px-4 py-8">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
 
           <div className="flex justify-center mb-6">
             {ticket.qrCode && (
@@ -136,7 +143,9 @@ const TicketDetails: React.FC = () => {
             </p>
           </div>
         </div>
+        </div>
       </div>
+      <Footer />
     </div>
   );
 };

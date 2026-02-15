@@ -5,6 +5,7 @@ import { format } from 'date-fns';
 import api from '../services/api';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import PageHeader from '../components/PageHeader';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 const MyTickets: React.FC = () => {
@@ -19,8 +20,12 @@ const MyTickets: React.FC = () => {
     <div className="flex flex-col min-h-screen bg-cream-light dark:bg-gray-900">
       <Navbar />
       <div className="flex-1">
+        <PageHeader
+          title="My Tickets"
+          subtitle="Your upcoming events and QR passes, always ready to scan."
+          badge="Eventee"
+        />
         <div className="max-w-6xl mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-6 text-gray-900 dark:text-white">My Tickets</h1>
 
         {!tickets || tickets.length === 0 ? (
           <div className="text-center py-12">

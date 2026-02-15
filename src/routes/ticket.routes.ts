@@ -379,4 +379,67 @@ router.get(
   TicketController.getEventAttendees
 );
 
+/**
+ * @swagger
+ * /api/tickets/claim-free:
+ *   post:
+ *     summary: Claim a free ticket
+ *     tags: [Tickets]
+ *     description: Claim a ticket for a free event (ticketPrice = 0). No payment required. Role - Eventee
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - eventId
+ *             properties:
+ *               eventId:
+ *                 type: string
+ *                 description: The ID of the free event
+ *                 example: "507f1f77bcf86cd799439011"
+ *               reminder:
+ *                 type: string
+ *                 enum: [1_hour, 1_day, 3_days, 1_week, 2_weeks]
+ *                 description: Reminder preference for the event
+ *                 example: "1_day"
+ *     responses:
+ *       201:
+ *         description: Free ticket claimed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Free ticket claimed successfully"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     ticket:
+ *                       $ref: '#/components/schemas/Ticket'
+ *       400:
+ *         description: Bad request (not a free event, no tickets available, or already claimed)
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - Eventee role required
+ *       404:
+ *         description: Event not found
+ */
+router.post(
+  '/claim-free',
+  authenticate,
+  isEventee,
+  apiLimiter,
+  TicketController.claimFreeTicket
+);
+
 export default router;
