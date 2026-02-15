@@ -118,7 +118,7 @@ export class EmailService {
 
     await this.sendEmail({
       to,
-      subject: `🎉 Ticket Purchase Confirmed - ${ticketData.eventTitle}`,
+      subject: `🎉 Ticket ${(ticketData.ticketPrice ?? 0) === 0 ? 'Claimed' : 'Purchase'} Confirmed - ${ticketData.eventTitle}`,
       html: `
         <!DOCTYPE html>
         <html>
@@ -148,13 +148,13 @@ export class EmailService {
         <body>
           <div class="container">
             <div class="header">
-              <h1>🎉 Ticket Confirmed!</h1>
-              <div class="success-badge">✓ Purchase Successful</div>
+              <h1>🎉 Ticket ${(ticketData.ticketPrice ?? 0) === 0 ? 'Claimed!' : 'Confirmed!'}</h1>
+              <div class="success-badge">✓ ${(ticketData.ticketPrice ?? 0) === 0 ? 'Free Ticket Claimed' : 'Purchase Successful'}</div>
             </div>
             
             <div class="content">
               <p style="font-size: 16px; margin-bottom: 24px;">
-                Congratulations! Your ticket purchase for <strong>${ticketData.eventTitle}</strong> has been confirmed.
+                Congratulations! Your ticket ${(ticketData.ticketPrice ?? 0) === 0 ? 'for' : 'purchase for'} <strong>${ticketData.eventTitle}</strong> has been confirmed.
               </p>
 
               <div class="ticket-details">
@@ -165,12 +165,10 @@ export class EmailService {
                   <span class="ticket-number">${ticketData.ticketNumber}</span>
                 </div>
                 
-                ${ticketData.ticketPrice ? `
                 <div class="detail-row">
                   <span class="detail-label">Amount Paid:</span>
-                  <span class="detail-value">₦${ticketData.ticketPrice.toLocaleString()}</span>
+                  <span class="detail-value">${(ticketData.ticketPrice ?? 0) === 0 ? '<strong style="color: #10b981; font-size: 18px;">FREE</strong>' : '₦' + (ticketData.ticketPrice ?? 0).toLocaleString()}</span>
                 </div>
-                ` : ''}
               </div>
 
               <div class="ticket-details">
