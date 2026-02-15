@@ -4,6 +4,7 @@ import { toast } from 'react-toastify';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import LoadingSpinner from '../components/LoadingSpinner';
+import PageHeader from '../components/PageHeader';
 import { useAuth } from '../contexts/AuthContext';
 import { authService } from '../services/auth.service';
 import { User } from '../types';
@@ -146,10 +147,13 @@ const Profile: React.FC = () => {
     <div className="min-h-screen bg-cream-light dark:bg-gray-900 flex flex-col">
       <Navbar />
       <div className="flex-1">
+        <PageHeader
+          title="My Profile"
+          subtitle="Manage your details and keep your profile fresh."
+          badge="Account"
+        />
         <div className="max-w-2xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-8">My Profile</h1>
-
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
               {/* Profile Picture Section */}
               <div className="flex flex-col items-center">

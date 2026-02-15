@@ -275,13 +275,35 @@ export class PaymentController {
       if (isNewTicket && user?.email) {
         setImmediate(async () => {
           try {
+            // Get organizer details for email
+            let organizerName = 'Eventful';
+            if (event.organizer) {
+              const organizer = await User.findById(event.organizer);
+              if (organizer) {
+                organizerName = `${organizer.firstName} ${organizer.lastName}`;
+              }
+            }
+
             await EmailService.sendTicketConfirmation(user.email, {
               eventTitle: event.title,
               ticketNumber: ticket.ticketNumber,
-              eventDate: event.startDate.toLocaleString(),
+              eventDate: event.startDate.toLocaleString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+              }),
               venue: event.venue,
-              qrCode
+              qrCode,
+              ticketId: ticket._id.toString(),
+              eventDescription: event.description,
+              eventCategory: event.category,
+              ticketPrice: payment.amount,
+              organizerName
             });
+            Logger.info(`Confirmation email sent to ${user.email} for ticket ${ticket.ticketNumber}`);
           } catch (emailError) {
             Logger.error('Failed to send confirmation email:', emailError);
           }

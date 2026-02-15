@@ -1,12 +1,16 @@
 import { Response } from 'express';
 import Ticket from '../models/Ticket';
 import Event from '../models/Event';
+import User from '../models/User';
 import { AuthRequest, TicketStatus } from '../types';
 import { NotificationService } from '../services/notification.service';
+import { QRCodeService } from '../services/qrcode.service';
+import { EmailService } from '../services/email.service';
 import { Logger } from '../utils/logger';
 import {
   calculateReminderDate,
-  getPaginationParams
+  getPaginationParams,
+  generateTicketNumber
 } from '../utils/helpers';
 
 export class TicketController {
@@ -425,6 +429,201 @@ export class TicketController {
       res.status(500).json({
         success: false,
         message: 'Failed to mark ticket as used'
+      });
+    }
+  }
+
+  /**
+   * Claim a free ticket (no payment required)
+   */
+  static async claimFreeTicket(req: AuthRequest, res: Response): Promise<void> {
+    try {
+      const { eventId, reminder } = req.body;
+
+      // Validate input
+      if (!eventId) {
+        res.status(400).json({
+          success: false,
+          message: 'Event ID is required'
+        });
+        return;
+      }
+
+      // Check authentication
+      if (!req.user || !req.user.id) {
+        res.status(401).json({
+          success: false,
+          message: 'Authentication required. Please login to claim tickets.'
+        });
+        return;
+      }
+
+      // Get event details
+      const event = await Event.findById(eventId);
+      if (!event) {
+        res.status(404).json({
+          success: false,
+          message: 'Event not found'
+        });
+        return;
+      }
+
+      // Check if event is free
+      if (event.ticketPrice > 0) {
+        res.status(400).json({
+          success: false,
+          message: 'This is not a free event. Please use the payment flow.'
+        });
+        return;
+      }
+
+      // Check event status
+      if (event.status !== 'published') {
+        res.status(400).json({
+          success: false,
+          message: 'This event is not available for ticket claims'
+        });
+        return;
+      }
+
+      // Check ticket availability
+      if (event.availableTickets <= 0) {
+        res.status(400).json({
+          success: false,
+          message: 'Sorry, no tickets are available for this event'
+        });
+        return;
+      }
+
+      // Get user details
+      const user = await User.findById(req.user.id);
+      if (!user) {
+        res.status(404).json({
+          success: false,
+          message: 'User account not found'
+        });
+        return;
+      }
+
+      // Check if user already has a ticket for this event
+      const existingTicket = await Ticket.findOne({
+        user: user._id.toString(),
+        event: event._id.toString()
+      });
+
+      if (existingTicket) {
+        res.status(400).json({
+          success: false,
+          message: 'You already have a ticket for this event',
+          data: { ticketId: existingTicket._id }
+        });
+        return;
+      }
+
+      Logger.info(`Claiming free ticket for user ${user.email} for event ${event.title}`);
+
+      // Generate ticket number
+      const ticketNumber = generateTicketNumber();
+
+      // Generate QR code
+      const qrCodeData = {
+        ticketNumber,
+        eventId: event._id.toString(),
+        userId: user._id.toString(),
+        eventTitle: event.title
+      };
+
+      const qrCode = await QRCodeService.generateQRCode(qrCodeData);
+
+      // Create ticket
+      const ticket = await Ticket.create({
+        ticketNumber,
+        event: event._id.toString(),
+        user: user._id.toString(),
+        qrCode,
+        qrCodeData: JSON.stringify(qrCodeData),
+        status: TicketStatus.PAID,
+        price: 0,
+        reminder: reminder || event.defaultReminder
+      });
+
+      Logger.info(`Free ticket created: ${ticketNumber}`, { ticketId: ticket._id.toString() });
+
+      // Update event available tickets
+      event.availableTickets -= 1;
+      await event.save();
+
+      // Create reminder
+      const reminderDate = calculateReminderDate(
+        event.startDate,
+        ticket.reminder
+      );
+      await NotificationService.createReminder(
+        user._id.toString(),
+        event._id.toString(),
+        ticket._id.toString(),
+        reminderDate
+      );
+
+      // Send confirmation email asynchronously
+      setImmediate(async () => {
+        try {
+          // Get organizer details
+          let organizerName = 'Eventful';
+          if (event.creator) {
+            const organizer = await User.findById(event.creator).select('firstName lastName');
+            if (organizer) {
+              organizerName = `${organizer.firstName || ''} ${organizer.lastName || ''}`.trim();
+            }
+          }
+
+          const eventDate = event.startDate.toLocaleString('en-US', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          });
+
+          await EmailService.sendTicketConfirmation(
+            user.email,
+            {
+              eventTitle: event.title,
+              ticketNumber,
+              eventDate,
+              venue: event.venue,
+              qrCode,
+              ticketId: ticket._id.toString(),
+              eventDescription: event.description,
+              eventCategory: event.category,
+              ticketPrice: 0,
+              organizerName
+            }
+          );
+
+          Logger.info(`Free ticket confirmation email sent to ${user.email}`);
+        } catch (emailError) {
+          Logger.error('Error sending free ticket email:', emailError);
+        }
+      });
+
+      // Populate ticket with event details for response
+      const populatedTicket = await Ticket.findById(ticket._id)
+        .populate('event')
+        .populate('user', 'firstName lastName email');
+
+      res.status(201).json({
+        success: true,
+        message: 'Free ticket claimed successfully',
+        data: { ticket: populatedTicket }
+      });
+    } catch (error: any) {
+      Logger.error('Claim free ticket error:', error);
+      res.status(500).json({
+        success: false,
+        message: error.message || 'Failed to claim free ticket',
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
       });
     }
   }

@@ -3,6 +3,8 @@ import { useQuery } from 'react-query';
 import { format } from 'date-fns';
 import api from '../services/api';
 import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
+import PageHeader from '../components/PageHeader';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 const Analytics: React.FC = () => {
@@ -25,10 +27,15 @@ const Analytics: React.FC = () => {
   if (isLoadingOverall || isLoadingEvents) return <LoadingSpinner />;
 
   return (
-    <div>
+    <div className="min-h-screen bg-cream-light dark:bg-gray-900 flex flex-col">
       <Navbar />
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-6">Analytics Dashboard</h1>
+      <div className="flex-1">
+        <PageHeader
+          title="Analytics Dashboard"
+          subtitle="Track revenue, attendance, and sales velocity in real time."
+          badge="Creator"
+        />
+        <div className="max-w-6xl mx-auto px-4 py-8">
 
         {overallData && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -104,7 +111,9 @@ const Analytics: React.FC = () => {
             </div>
           )}
         </div>
+        </div>
       </div>
+      <Footer />
     </div>
   );
 };

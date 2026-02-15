@@ -5,6 +5,8 @@ import { toast } from 'react-toastify';
 import { useAuth } from '../contexts/AuthContext';
 import { authService } from '../services/auth.service';
 import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
+import PageHeader from '../components/PageHeader';
 
 interface LoginFormData {
   email: string;
@@ -52,10 +54,15 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div>
+    <div className="min-h-screen bg-cream-light dark:bg-gray-900 flex flex-col">
       <Navbar />
-      <div className="min-h-screen flex items-center justify-center bg-cream-light dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full space-y-8">
+      <div className="flex-1">
+        <PageHeader
+          title="Welcome Back"
+          subtitle="Sign in to manage events, tickets, and insights in one place."
+          badge="Authentication"
+        />
+        <div className="max-w-md w-full mx-auto space-y-8 py-12 px-4 sm:px-6 lg:px-8">
           <div>
             <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
               Sign in to your account
@@ -176,6 +183,7 @@ const Login: React.FC = () => {
           </form>
         </div>
       </div>
+      <Footer />
     </div>
   );
 };

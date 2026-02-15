@@ -23,6 +23,7 @@ import TicketDetails from './pages/TicketDetails';
 import Analytics from './pages/Analytics';
 import PaymentVerify from './pages/PaymentVerify';
 import PaymentSuccess from './pages/PaymentSuccess';
+import TicketSuccess from './pages/TicketSuccess';
 import VerifyTickets from './pages/VerifyTickets';
 import InactivityWrapper from './components/InactivityWrapper';
 
@@ -51,6 +52,7 @@ const App: React.FC = () => {
                   <Route path="/events" element={<Events />} />
                   <Route path="/events/:id" element={<EventDetails />} />
                   <Route path="/payment/success" element={<PaymentSuccess />} />
+                  <Route path="/ticket-success" element={<TicketSuccess />} />
 
                   {/* Protected Routes */}
                   <Route
