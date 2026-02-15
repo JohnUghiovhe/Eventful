@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { toast } from 'react-toastify';
 import { format } from 'date-fns';
+import { Html5Qrcode } from 'html5-qrcode';
 import api from '../services/api';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -29,6 +30,10 @@ const VerifyTickets: React.FC = () => {
   const [ticketInput, setTicketInput] = useState('');
   const [selectedEvent, setSelectedEvent] = useState('');
   const [verifiedTickets, setVerifiedTickets] = useState<VerifiedTicket[]>([]);
+  const [isScanning, setIsScanning] = useState(false);
+  const [scannerError, setScannerError] = useState('');
+  const scannerRef = useRef<Html5Qrcode | null>(null);
+  const scannerDivId = 'qr-reader';
 
   // Fetch creator's events
   const { data: events, isLoading: eventsLoading } = useQuery('myEvents', async () => {
@@ -92,6 +97,77 @@ const VerifyTickets: React.FC = () => {
     }
     verifyMutation.mutate(ticketInput.trim());
   };
+
+  // QR Code Scanner Functions
+  const startScanner = async () => {
+    if (!selectedEvent) {
+      toast.warning('Please select an event first');
+      return;
+    }
+
+    setScannerError('');
+    setIsScanning(true);
+
+    try {
+      const html5QrCode = new Html5Qrcode(scannerDivId);
+      scannerRef.current = html5QrCode;
+
+      await html5QrCode.start(
+        { facingMode: 'environment' },
+        {
+          fps: 10,
+          qrbox: { width: 250, height: 250 },
+        },
+        (decodedText) => {
+          // Parse QR code data
+          try {
+            const qrData = JSON.parse(decodedText);
+            const ticketNumber = qrData.ticketNumber;
+            
+            if (ticketNumber) {
+              // Auto-verify the ticket
+              verifyMutation.mutate(ticketNumber);
+              stopScanner();
+            }
+          } catch (error) {
+            // If not JSON, treat as plain ticket number
+            verifyMutation.mutate(decodedText);
+            stopScanner();
+          }
+        },
+        () => {
+          // Error callback - ignore individual scan errors
+        }
+      );
+    } catch (error: any) {
+      console.error('Scanner error:', error);
+      setScannerError(error.message || 'Failed to start camera. Please check permissions.');
+      setIsScanning(false);
+    }
+  };
+
+  const stopScanner = async () => {
+    if (scannerRef.current) {
+      try {
+        await scannerRef.current.stop();
+        scannerRef.current.clear();
+        scannerRef.current = null;
+      } catch (error) {
+        console.error('Error stopping scanner:', error);
+      }
+    }
+    setIsScanning(false);
+    setScannerError('');
+  };
+
+  // Cleanup scanner on unmount
+  useEffect(() => {
+    return () => {
+      if (scannerRef.current) {
+        scannerRef.current.stop().catch(console.error);
+      }
+    };
+  }, []);
 
   if (eventsLoading) return <LoadingSpinner />;
 
@@ -159,9 +235,51 @@ const VerifyTickets: React.FC = () => {
                   </button>
                 </form>
 
+                {/* Camera Scanner Section */}
+                <div className="mt-6">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-white">📷 Camera Scanner</h3>
+                    <button
+                      onClick={isScanning ? stopScanner : startScanner}
+                      disabled={!selectedEvent}
+                      className={`px-4 py-2 rounded-md font-medium transition-colors disabled:opacity-50 ${
+                        isScanning
+                          ? 'bg-red-600 hover:bg-red-700 text-white'
+                          : 'bg-green-600 hover:bg-green-700 text-white'
+                      }`}
+                    >
+                      {isScanning ? '⏹ Stop Camera' : '📸 Start Camera'}
+                    </button>
+                  </div>
+
+                  {/* QR Scanner Container */}
+                  <div
+                    id={scannerDivId}
+                    className={`${
+                      isScanning ? 'block' : 'hidden'
+                    } w-full rounded-lg overflow-hidden border-2 border-indigo-500`}
+                  />
+
+                  {scannerError && (
+                    <div className="mt-3 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
+                      <p className="text-sm text-red-800 dark:text-red-200">
+                        ⚠️ {scannerError}
+                      </p>
+                    </div>
+                  )}
+
+                  {isScanning && !scannerError && (
+                    <div className="mt-3 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md">
+                      <p className="text-sm text-green-800 dark:text-green-200">
+                        ✓ Camera active. Point at a QR code to scan automatically.
+                      </p>
+                    </div>
+                  )}
+                </div>
+
                 <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-md">
                   <p className="text-sm text-blue-800 dark:text-blue-200">
-                    💡 Tip: You can scan QR codes directly or paste ticket numbers. The system will automatically validate the ticket and match it to your event.
+                    💡 <strong>Tip:</strong> Use the camera scanner above to scan QR codes, or manually enter ticket numbers. The system will automatically validate tickets and match them to your selected event.
                   </p>
                 </div>
               </div>
