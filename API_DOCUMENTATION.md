@@ -5,6 +5,11 @@
 http://localhost:5000/api
 ```
 
+## Production URL
+```
+https://eventful-api.onrender.com/api-docs
+```
+
 ## Authentication
 Most endpoints require JWT authentication. Include the token in the Authorization header:
 ```

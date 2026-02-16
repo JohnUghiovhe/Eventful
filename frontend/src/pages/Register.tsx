@@ -170,15 +170,15 @@ const Register: React.FC = () => {
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
                   Password
-                  (min. 6 characters, must contain letters and numbers)
+                  (min. 6 characters, must contain letters, numbers and special characters)
                 </label>
                 <div className="mt-1 relative">
                   <input
                     {...register('password', {
                       required: 'Password is required',
                       pattern: {
-                        value: /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/,
-                        message: 'Password must contain letters and numbers',
+                        value: /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$/,
+                        message: 'Password must contain letters, numbers and special characters',
                       },
                       minLength: {
                         value: 6,
