@@ -99,7 +99,7 @@ const EventDetails: React.FC = () => {
           title={event.title}
           subtitle={`${event.venue} · ${format(new Date(event.startDate), 'PPP p')}`}
           badge="Event details"
-          actions={<ShareButton eventId={event._id} eventTitle={event.title} />}
+          actions={<ShareButton eventId={event._id} />}
         />
         <div className="max-w-4xl mx-auto px-4 py-8">
           {event.images?.length > 0 && (

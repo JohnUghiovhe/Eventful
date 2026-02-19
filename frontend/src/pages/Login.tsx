@@ -28,13 +28,10 @@ const Login: React.FC = () => {
   const onSubmit = async (data: LoginFormData) => {
     try {
       setLoading(true);
-      console.log('Attempting login with:', { email: data.email });
       
       const response = await authService.login(data);
-      console.log('Login response:', response);
 
       if (response.success && response.data) {
-        console.log('Login successful, redirecting...');
         login(response.data.token, response.data.user);
         toast.success('Login successful!');
         navigate('/dashboard');

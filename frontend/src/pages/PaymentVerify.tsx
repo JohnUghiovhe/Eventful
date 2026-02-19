@@ -39,9 +39,11 @@ const PaymentVerify: React.FC = () => {
     }
   );
 
+  const { mutate: verifyPayment } = verifyMutation;
+
   useEffect(() => {
     if (reference) {
-      verifyMutation.mutate();
+      verifyPayment();
     } else if (demo === 'true') {
       // Handle demo payment (no Paystack verification needed)
       toast.success('Payment verified! Your ticket has been issued.');
@@ -53,8 +55,7 @@ const PaymentVerify: React.FC = () => {
       toast.error('No payment reference found');
       navigate('/');
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [reference, demo]);
+  }, [reference, demo, verifyPayment, queryClient, navigate]);
 
   return (
     <div className="min-h-screen bg-cream-light dark:bg-gray-900 flex flex-col">

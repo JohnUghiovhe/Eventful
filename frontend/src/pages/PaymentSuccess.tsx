@@ -24,7 +24,6 @@ const PaymentSuccess: React.FC = () => {
   useEffect(() => {
     // Prevent duplicate verification calls (handles React StrictMode in development)
     if (verifyAttemptRef.current === reference) {
-      console.log('Payment verification already in progress for this reference:', reference);
       return;
     }
 
@@ -63,11 +62,8 @@ const PaymentSuccess: React.FC = () => {
           return;
         }
 
-        console.log('Verifying payment with reference:', reference);
-
         // Handle demo mode (no backend verification needed)
         if (demo === 'true') {
-          console.log('Demo mode - showing sample ticket');
           // Create demo ticket and event using type assertion
           const demoEvent = {
             _id: 'demo-event',
@@ -100,7 +96,6 @@ const PaymentSuccess: React.FC = () => {
         }
 
         // Verify payment with backend (public endpoint for redirect flow)
-        console.log('Calling /payments/verify-public endpoint');
         const requestVerify = () => withTimeout(api.post('/payments/verify-public', { reference }), 10000);
         let verifyResponse = await requestVerify();
 
@@ -110,8 +105,6 @@ const PaymentSuccess: React.FC = () => {
           await new Promise(resolve => setTimeout(resolve, 1500));
           verifyResponse = await requestVerify();
         }
-
-        console.log('Payment verification response:', verifyResponse.data);
 
         if (verifyResponse.data.success && verifyResponse.data.data) {
           const verifiedTicket = verifyResponse.data.data.ticket as Ticket | undefined;
