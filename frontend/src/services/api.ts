@@ -5,12 +5,6 @@ import { isTokenExpired } from '../utils/token';
 const API_URL = import.meta.env.VITE_API_URL || 
   (import.meta.env.DEV ? '/api' : 'https://eventful-api.onrender.com/api');
 
-console.log('API Configuration:', {
-  mode: import.meta.env.DEV ? 'development' : 'production',
-  API_URL,
-  VITE_API_URL: import.meta.env.VITE_API_URL
-});
-
 const api = axios.create({
   baseURL: API_URL,
   headers: {
@@ -38,7 +32,6 @@ api.interceptors.request.use(
         config.headers.Authorization = `Bearer ${token}`;
       }
     }
-    console.log('Request:', { method: config.method, url: config.url, baseURL: config.baseURL });
     return config;
   },
   (error) => {
@@ -50,7 +43,6 @@ api.interceptors.request.use(
 // Response interceptor to handle errors
 api.interceptors.response.use(
   (response) => {
-    console.log('Response:', { status: response.status, url: response.config.url });
     return response;
   },
   (error) => {

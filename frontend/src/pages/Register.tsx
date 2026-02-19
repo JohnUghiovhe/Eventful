@@ -38,12 +38,8 @@ const Register: React.FC = () => {
     try {
       setLoading(true);
       const { confirmPassword, ...registerData } = data;
-      
-      console.log('Submitting registration data:', registerData);
-      
+
       const response = await authService.register(registerData);
-      
-      console.log('Registration response:', response);
 
       if (response.success && response.data) {
         login(response.data.token, response.data.user);

@@ -4,7 +4,6 @@ import { eventService } from '../services/event.service';
 
 interface ShareButtonProps {
   eventId: string;
-  eventTitle: string;
 }
 
 const ShareButton: React.FC<ShareButtonProps> = ({ eventId }) => {
