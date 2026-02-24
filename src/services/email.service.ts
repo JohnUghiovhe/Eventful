@@ -29,18 +29,28 @@ const handlebarOptions: any = {
 };
 
 const createTransporter = (port: number, secure: boolean) => {
-  const transporter = nodemailer.createTransport({
+  const transportConfig: any = {
     host: EMAIL_HOST,
     port,
     secure,
-    connectionTimeout: 15000,
-    greetingTimeout: 15000,
-    socketTimeout: 30000,
+    connectionTimeout: 10000,    // 10 seconds (reduced from 15s)
+    greetingTimeout: 5000,       // 5 seconds (reduced from 15s)
+    socketTimeout: 15000,        // 15 seconds (reduced from 30s)
     auth: {
       user: EMAIL_USER,
       pass: EMAIL_PASSWORD
     }
-  });
+  };
+
+  // Pool configuration
+  (transportConfig as any).pool = {
+    maxConnections: 5,           // Connection pooling for reuse
+    maxMessages: 100,            // Max messages per connection
+    rateDelta: 250,              // Rate limit messages
+    rateLimit: 5                 // Max 5 messages per rateDelta
+  };
+
+  const transporter = nodemailer.createTransport(transportConfig);
 
   transporter.use('compile', hbs(handlebarOptions));
   return transporter;
@@ -63,12 +73,69 @@ export interface EmailOptions {
 
 export class EmailService {
   /**
+   * Validate email configuration
+   */
+  static validateConfig(): { valid: boolean; errors: string[] } {
+    const errors: string[] = [];
+
+    if (!EMAIL_USER) {
+      errors.push('EMAIL_USER is not set');
+    }
+
+    if (!EMAIL_PASSWORD) {
+      errors.push('EMAIL_PASSWORD is not set');
+    }
+
+    if (!EMAIL_HOST) {
+      errors.push('EMAIL_HOST is not set');
+    }
+
+    return {
+      valid: errors.length === 0,
+      errors
+    };
+  }
+
+  /**
+   * Test SMTP connection
+   */
+  static async testConnection(): Promise<boolean> {
+    try {
+      const config = this.validateConfig();
+      if (!config.valid) {
+        Logger.error('Email configuration invalid:', config.errors);
+        return false;
+      }
+
+      for (let index = 0; index < transporters.length; index++) {
+        const transporter = transporters[index];
+        try {
+          await transporter.verify();
+          Logger.info(`SMTP connection verified on transport ${index + 1}`);
+          return true;
+        } catch (error) {
+          Logger.warn(
+            `SMTP verification failed on transport ${index + 1} (${EMAIL_HOST}:${index === 0 ? EMAIL_PORT : 465})`
+          );
+        }
+      }
+
+      Logger.error('All SMTP connections failed verification');
+      return false;
+    } catch (error) {
+      Logger.error('Email configuration test failed:', error);
+      return false;
+    }
+  }
+
+  /**
    * Send an email
    */
   static async sendEmail(options: EmailOptions): Promise<boolean> {
     try {
-      if (!EMAIL_USER || !EMAIL_PASSWORD) {
-        Logger.error('Email sending failed: EMAIL_USER or EMAIL_PASSWORD is not configured');
+      const config = this.validateConfig();
+      if (!config.valid) {
+        Logger.error('Email configuration invalid:', config.errors);
         return false;
       }
 
@@ -93,19 +160,20 @@ export class EmailService {
 
       for (let index = 0; index < transporters.length; index++) {
         const transporter = transporters[index];
+        const port = index === 0 ? EMAIL_PORT : 465;
         try {
           await transporter.sendMail(mailOptions);
-          Logger.info(`Email sent to ${options.to}`);
+          Logger.info(`Email sent to ${options.to} via transport ${index + 1}`);
           return true;
         } catch (error: any) {
           lastError = error;
           Logger.warn(
-            `Email send attempt ${index + 1}/${transporters.length} failed on ${EMAIL_HOST}:${index === 0 ? EMAIL_PORT : 465} - ${error?.message || 'Unknown error'}`
+            `Email send attempt ${index + 1}/${transporters.length} failed on ${EMAIL_HOST}:${port} - ${error?.message || 'Unknown error'}`
           );
         }
       }
 
-      Logger.error('Email sending failed after all SMTP attempts:', lastError);
+      Logger.error(`Email sending failed for ${options.to} after all SMTP attempts:`, lastError?.message);
       return false;
     } catch (error) {
       Logger.error('Email sending failed:', error);
