@@ -160,23 +160,32 @@ export class AuthController {
 
       const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
       const resetUrl = `${frontendUrl}/reset-password?token=${resetToken}`;
-      const emailSent = await EmailService.sendPasswordResetEmail(user.email, resetUrl);
 
-      if (!emailSent) {
-        user.passwordResetToken = undefined;
-        user.passwordResetExpires = undefined;
-        await user.save();
-
-        res.status(500).json({
-          success: false,
-          message: 'Failed to send password reset email. Please try again.'
+      // Send email asynchronously (non-blocking) with automatic rollback on failure
+      EmailService.sendPasswordResetEmail(user.email, resetUrl)
+        .then((emailSent) => {
+          if (!emailSent) {
+            Logger.warn(`Password reset email failed to send for user ${user.email}. Token will expire in 1 hour.`);
+            // Rollback token if email send fails
+            user.passwordResetToken = undefined;
+            user.passwordResetExpires = undefined;
+            user.save().catch((err) => Logger.error('Failed to rollback reset token:', err));
+          } else {
+            Logger.info(`Password reset email sent successfully to ${user.email}`);
+          }
+        })
+        .catch((error) => {
+          Logger.error(`Error sending password reset email to ${user.email}:`, error);
+          // Rollback token on any error
+          user.passwordResetToken = undefined;
+          user.passwordResetExpires = undefined;
+          user.save().catch((err) => Logger.error('Failed to rollback reset token:', err));
         });
-        return;
-      }
 
+      // Respond immediately (non-blocking)
       res.status(200).json({
         success: true,
-        message: 'Password reset link sent successfully'
+        message: 'Password reset link sent to your email. Please check your inbox.'
       });
     } catch (error: any) {
       Logger.error('Forgot password error:', error);

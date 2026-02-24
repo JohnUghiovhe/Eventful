@@ -310,4 +310,85 @@ router.get('/profile', authenticate, AuthController.getProfile);
  */
 router.put('/profile', authenticate, AuthController.updateProfile);
 
+/**
+ * @swagger
+ * /api/auth/health:
+ *   get:
+ *     summary: Check email service health
+ *     tags: [Authentication]
+ *     description: Diagnostic endpoint to verify email configuration and SMTP connectivity
+ *     responses:
+ *       200:
+ *         description: Email service is healthy
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 status:
+ *                   type: string
+ *                   enum: [healthy, misconfigured]
+ *                 emailConfig:
+ *                   type: object
+ *                   properties:
+ *                     emailUserSet:
+ *                       type: boolean
+ *                     emailPasswordSet:
+ *                       type: boolean
+ *                     emailHost:
+ *                       type: string
+ *                     smtpPort:
+ *                       type: number
+ *                 smtpConnection:
+ *                   type: boolean
+ *       400:
+ *         description: Email service is misconfigured
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 status:
+ *                   type: string
+ *                 errors:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ */
+router.get('/health', (_req, res) => {
+  const config = require('../services/email.service').EmailService.validateConfig?.();
+  const emailUserSet = !!process.env.EMAIL_USER;
+  const emailPasswordSet = !!process.env.EMAIL_PASSWORD;
+
+  if (!config?.valid) {
+    res.status(400).json({
+      success: false,
+      status: 'misconfigured',
+      emailConfig: {
+        emailUserSet,
+        emailPasswordSet,
+        emailHost: process.env.EMAIL_HOST || 'smtp.gmail.com',
+        smtpPort: parseInt(process.env.EMAIL_PORT || '587', 10)
+      },
+      configErrors: config?.errors || []
+    });
+    return;
+  }
+
+  res.status(200).json({
+    success: true,
+    status: 'healthy',
+    emailConfig: {
+      emailUserSet,
+      emailPasswordSet,
+      emailHost: process.env.EMAIL_HOST || 'smtp.gmail.com',
+      smtpPort: parseInt(process.env.EMAIL_PORT || '587', 10)
+    }
+  });
+});
+
 export default router;
