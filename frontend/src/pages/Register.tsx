@@ -173,7 +173,7 @@ const Register: React.FC = () => {
                     {...register('password', {
                       required: 'Password is required',
                       pattern: {
-                        value: /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$/,
+                        value: /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*.?&])[A-Za-z\d@$!.%*?&]{6,}$/,
                         message: 'Password must contain letters, numbers and special characters',
                       },
                       minLength: {

@@ -12,18 +12,10 @@ const resolveTemplateDir = () => {
   return process.env.NODE_ENV === 'production' ? distPath : srcPath;
 };
 
-const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-  port: parseInt(process.env.EMAIL_PORT || '587'),
-  secure: false,
-  connectionTimeout: 10000,
-  greetingTimeout: 10000,
-  socketTimeout: 15000,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASSWORD
-  }
-});
+const EMAIL_HOST = process.env.EMAIL_HOST || 'smtp.gmail.com';
+const EMAIL_PORT = parseInt(process.env.EMAIL_PORT || '587', 10);
+const EMAIL_USER = process.env.EMAIL_USER;
+const EMAIL_PASSWORD = (process.env.EMAIL_PASSWORD || '').replace(/\s+/g, '');
 
 // Configure handlebars for email templates
 const handlebarOptions: any = {
@@ -36,7 +28,29 @@ const handlebarOptions: any = {
   extName: '.hbs'
 };
 
-transporter.use('compile', hbs(handlebarOptions));
+const createTransporter = (port: number, secure: boolean) => {
+  const transporter = nodemailer.createTransport({
+    host: EMAIL_HOST,
+    port,
+    secure,
+    connectionTimeout: 15000,
+    greetingTimeout: 15000,
+    socketTimeout: 30000,
+    auth: {
+      user: EMAIL_USER,
+      pass: EMAIL_PASSWORD
+    }
+  });
+
+  transporter.use('compile', hbs(handlebarOptions));
+  return transporter;
+};
+
+const transporters = [createTransporter(EMAIL_PORT, EMAIL_PORT === 465)];
+
+if (EMAIL_PORT !== 465) {
+  transporters.push(createTransporter(465, true));
+}
 
 export interface EmailOptions {
   to: string;
@@ -51,10 +65,15 @@ export class EmailService {
   /**
    * Send an email
    */
-  static async sendEmail(options: EmailOptions): Promise<void> {
+  static async sendEmail(options: EmailOptions): Promise<boolean> {
     try {
+      if (!EMAIL_USER || !EMAIL_PASSWORD) {
+        Logger.error('Email sending failed: EMAIL_USER or EMAIL_PASSWORD is not configured');
+        return false;
+      }
+
       const mailOptions: any = {
-        from: `Eventful <${process.env.EMAIL_USER}>`,
+        from: `Eventful <${EMAIL_USER}>`,
         to: options.to,
         subject: options.subject
       };
@@ -70,11 +89,27 @@ export class EmailService {
         mailOptions.attachments = options.attachments;
       }
 
-      await transporter.sendMail(mailOptions);
-      Logger.info(`Email sent to ${options.to}`);
+      let lastError: any = null;
+
+      for (let index = 0; index < transporters.length; index++) {
+        const transporter = transporters[index];
+        try {
+          await transporter.sendMail(mailOptions);
+          Logger.info(`Email sent to ${options.to}`);
+          return true;
+        } catch (error: any) {
+          lastError = error;
+          Logger.warn(
+            `Email send attempt ${index + 1}/${transporters.length} failed on ${EMAIL_HOST}:${index === 0 ? EMAIL_PORT : 465} - ${error?.message || 'Unknown error'}`
+          );
+        }
+      }
+
+      Logger.error('Email sending failed after all SMTP attempts:', lastError);
+      return false;
     } catch (error) {
       Logger.error('Email sending failed:', error);
-      // Don't throw error, log it and continue
+      return false;
     }
   }
 
@@ -89,6 +124,22 @@ export class EmailService {
         <h1>Welcome to Eventful, ${name}!</h1>
         <p>Thank you for joining Eventful. We're excited to have you on board.</p>
         <p>Start exploring amazing events and create unforgettable memories!</p>
+      `
+    });
+  }
+
+// Send password reset email
+  static async sendPasswordResetEmail(to: string, resetUrl: string): Promise<boolean> {
+    return this.sendEmail({
+      to,
+      subject: 'Reset your Eventful password',
+      html: `
+        <h1>Password Reset Request</h1>
+        <p>We received a request to reset your password.</p>
+        <p>Click the link below to set a new password:</p>
+        <p><a href="${resetUrl}">${resetUrl}</a></p>
+        <p>This link expires in 1 hour.</p>
+        <p>If you did not request this, you can safely ignore this email.</p>
       `
     });
   }
@@ -262,9 +313,7 @@ export class EmailService {
     });
   }
 
-  /**
-   * Send event reminder
-   */
+// Send event reminder
   static async sendEventReminder(
     to: string,
     reminderData: {

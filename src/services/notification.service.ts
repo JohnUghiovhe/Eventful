@@ -1,6 +1,9 @@
 import schedule from 'node-schedule';
 import Reminder from '../models/Reminder';
 import Notification from '../models/Notification';
+import User from '../models/User';
+import Event from '../models/Event';
+import Ticket from '../models/Ticket';
 import { EmailService } from './email.service';
 import { Logger } from '../utils/logger';
 import { NotificationType } from '../types';
@@ -35,10 +38,13 @@ export class NotificationService {
 
       for (const reminder of reminders) {
         try {
-          await this.sendReminder(reminder);
-          reminder.sent = true;
-          reminder.sentAt = new Date();
-          await reminder.save();
+          const result = await this.sendReminder(reminder);
+
+          if (result === 'sent' || result === 'skipped') {
+            reminder.sent = true;
+            reminder.sentAt = new Date();
+            await reminder.save();
+          }
         } catch (error) {
           Logger.error(`Failed to send reminder ${reminder._id}:`, error);
         }
@@ -49,10 +55,22 @@ export class NotificationService {
   }
 
   // Send a single reminder
-  static async sendReminder(reminder: any): Promise<void> {
-    const user = reminder.user;
-    const event = reminder.event;
-    const ticket = reminder.ticket;
+  static async sendReminder(reminder: any): Promise<'sent' | 'skipped'> {
+    const user = await this.resolveUser(reminder.user);
+    const event = await this.resolveEvent(reminder.event);
+    const ticket = await this.resolveTicket(reminder.ticket);
+
+    if (!user || !event || !ticket) {
+      Logger.warn(
+        `Skipping reminder ${reminder._id} due to missing relation(s): user=${Boolean(user)} event=${Boolean(event)} ticket=${Boolean(ticket)}`
+      );
+      return 'skipped';
+    }
+
+    if (!user.email) {
+      Logger.warn(`Skipping reminder ${reminder._id}: user has no email`);
+      return 'skipped';
+    }
 
     await EmailService.sendEventReminder(user.email, {
       eventTitle: event.title,
@@ -62,6 +80,25 @@ export class NotificationService {
     });
 
     Logger.info(`Reminder sent to ${user.email} for event ${event.title}`);
+    return 'sent';
+  }
+
+  private static async resolveUser(userRef: any): Promise<any> {
+    if (!userRef) return null;
+    if (typeof userRef === 'object' && userRef.email) return userRef;
+    return User.findById(String(userRef));
+  }
+
+  private static async resolveEvent(eventRef: any): Promise<any> {
+    if (!eventRef) return null;
+    if (typeof eventRef === 'object' && eventRef.title) return eventRef;
+    return Event.findById(String(eventRef));
+  }
+
+  private static async resolveTicket(ticketRef: any): Promise<any> {
+    if (!ticketRef) return null;
+    if (typeof ticketRef === 'object' && ticketRef.ticketNumber) return ticketRef;
+    return Ticket.findById(String(ticketRef));
   }
 
   // Create a reminder for a ticket 
