@@ -12,6 +12,8 @@ import PrivateRoute from './components/PrivateRoute';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import Events from './pages/Events';
 import EventDetails from './pages/EventDetails';
 import Dashboard from './pages/Dashboard';
@@ -26,6 +28,7 @@ import PaymentSuccess from './pages/PaymentSuccess';
 import TicketSuccess from './pages/TicketSuccess';
 import VerifyTickets from './pages/VerifyTickets';
 import InactivityWrapper from './components/InactivityWrapper';
+import SupportChatbot from './components/SupportChatbot';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -49,6 +52,8 @@ const App: React.FC = () => {
                   <Route path="/" element={<Home />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />
+                  <Route path="/forgot-password" element={<ForgotPassword />} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
                   <Route path="/events" element={<Events />} />
                   <Route path="/events/:id" element={<EventDetails />} />
                   <Route path="/payment/success" element={<PaymentSuccess />} />
@@ -140,6 +145,7 @@ const App: React.FC = () => {
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
               </div>
+              <SupportChatbot />
             </InactivityWrapper>
           </AuthProvider>
         </ThemeProvider>

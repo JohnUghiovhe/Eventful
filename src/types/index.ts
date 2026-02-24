@@ -52,6 +52,8 @@ export enum NotificationType {
 export interface IUser extends Document {
   email: string;
   password: string;
+  passwordResetToken?: string;
+  passwordResetExpires?: Date;
   firstName: string;
   lastName: string;
   role: UserRole;

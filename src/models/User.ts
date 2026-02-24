@@ -16,6 +16,14 @@ const userSchema = new Schema<IUser>(
       required: true,
       minlength: 6
     },
+    passwordResetToken: {
+      type: String,
+      default: null
+    },
+    passwordResetExpires: {
+      type: Date,
+      default: null
+    },
     firstName: {
       type: String,
       required: true,

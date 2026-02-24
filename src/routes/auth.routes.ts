@@ -1,7 +1,12 @@
 import { Router } from 'express';
 import { AuthController } from '../controllers/auth.controller';
 import { authenticate } from '../middleware/auth';
-import { validateRegistration, validateLogin } from '../middleware/validation';
+import {
+	validateRegistration,
+	validateLogin,
+	validateForgotPassword,
+	validateResetPassword
+} from '../middleware/validation';
 import { authLimiter } from '../middleware/rateLimiter';
 
 const router = Router();
@@ -131,6 +136,97 @@ router.post('/register', authLimiter, validateRegistration, AuthController.regis
  *               $ref: '#/components/schemas/Error'
  */
 router.post('/login', authLimiter, validateLogin, AuthController.login);
+
+/**
+ * @swagger
+ * /api/auth/forgot-password:
+ *   post:
+ *     summary: Request password reset link
+ *     tags: [Authentication]
+ *     description: Verifies a registered email and sends a password reset link. Role - Public
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: john@example.com
+ *     responses:
+ *       200:
+ *         description: Reset email sent successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Password reset link sent successfully
+ *       404:
+ *         description: No account found for provided email
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.post('/forgot-password', authLimiter, validateForgotPassword, AuthController.forgotPassword);
+
+/**
+ * @swagger
+ * /api/auth/reset-password:
+ *   post:
+ *     summary: Reset password using token
+ *     tags: [Authentication]
+ *     description: Resets account password using a valid reset token. Role - Public
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - token
+ *               - password
+ *             properties:
+ *               token:
+ *                 type: string
+ *                 example: 2f0c8a7c4e99b5d6f41c3b0f8f2f1a7de8c2d7a7...
+ *               password:
+ *                 type: string
+ *                 format: password
+ *                 minLength: 6
+ *                 example: NewPassword123!
+ *     responses:
+ *       200:
+ *         description: Password reset successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Password reset successful. You can now log in with your new password.
+ *       400:
+ *         description: Invalid or expired token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.post('/reset-password', authLimiter, validateResetPassword, AuthController.resetPassword);
 
 /**
  * @swagger

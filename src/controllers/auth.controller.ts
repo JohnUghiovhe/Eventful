@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 import User from '../models/User';
 import { EmailService } from '../services/email.service';
 import { sanitizeUser } from '../utils/helpers';
@@ -13,9 +14,7 @@ dotenv.config();
 const JWT_SECRET: string = process.env.JWT_SECRET || 'your-secret-key';
 
 export class AuthController {
-  /**
-   * Register a new user
-   */
+//  Register a new user
   static async register(req: Request, res: Response): Promise<void> {
     try {
       const { email, password, firstName, lastName, role, phoneNumber } = req.body;
@@ -136,9 +135,97 @@ export class AuthController {
     });
   }
 
-  /**
-   * Get current user profile
-   */
+// Request password reset
+  static async forgotPassword(req: Request, res: Response): Promise<void> {
+    try {
+      const { email } = req.body;
+
+      const normalizedEmail = String(email || '').trim().toLowerCase();
+      const user = await User.findOne({ email: normalizedEmail });
+
+      if (!user) {
+        res.status(404).json({
+          success: false,
+          message: 'No account found with this email address'
+        });
+        return;
+      }
+
+      const resetToken = crypto.randomBytes(32).toString('hex');
+      const hashedResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+
+      user.passwordResetToken = hashedResetToken;
+      user.passwordResetExpires = new Date(Date.now() + 60 * 60 * 1000);
+      await user.save();
+
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+      const resetUrl = `${frontendUrl}/reset-password?token=${resetToken}`;
+      const emailSent = await EmailService.sendPasswordResetEmail(user.email, resetUrl);
+
+      if (!emailSent) {
+        user.passwordResetToken = undefined;
+        user.passwordResetExpires = undefined;
+        await user.save();
+
+        res.status(500).json({
+          success: false,
+          message: 'Failed to send password reset email. Please try again.'
+        });
+        return;
+      }
+
+      res.status(200).json({
+        success: true,
+        message: 'Password reset link sent successfully'
+      });
+    } catch (error: any) {
+      Logger.error('Forgot password error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to process password reset request'
+      });
+    }
+  }
+
+// Reset password using token
+  static async resetPassword(req: Request, res: Response): Promise<void> {
+    try {
+      const { token, password } = req.body;
+
+      const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
+      const user = await User.findOne({
+        passwordResetToken: hashedToken,
+        passwordResetExpires: { $gt: new Date() }
+      });
+
+      if (!user) {
+        res.status(400).json({
+          success: false,
+          message: 'Invalid or expired reset token'
+        });
+        return;
+      }
+
+      user.password = password;
+      user.passwordResetToken = undefined;
+      user.passwordResetExpires = undefined;
+      await user.save();
+
+      res.status(200).json({
+        success: true,
+        message: 'Password reset successful. You can now log in with your new password.'
+      });
+    } catch (error: any) {
+      Logger.error('Reset password error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to reset password'
+      });
+    }
+  }
+
+// Get current user profile
   static async getProfile(req: AuthRequest, res: Response): Promise<void> {
     try {
       if (!req.user) {
